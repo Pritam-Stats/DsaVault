@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sliding Window & Two Pointers Masterclass</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fffbe3',
+                            100: '#fff3b8',
+                            500: '#d97706',
+                            600: '#b45309',
+                            700: '#92400e',
+                            900: '#451a03',
+                        },
+                        slate: {
+                            850: '#151e2e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        <!-- Chosen Palette: Warm Sand & Technical Slate -->
+        /* Custom Styles & Chart Constraints */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+        .pointer-badge {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .array-cell {
+            transition: all 0.3s ease;
+        }
+        /* Custom scrollbar for log output */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Application Structure Plan:
+        1. Navigation & Header: Contextual overview and global stats.
+        2. Hero & First Principles Philosophy: Visual breakdown of moving from O(N^3) to O(N).
+        3. Visualizer Studio: Step-by-step interactive runner for all 6 key algorithms from notes.
+        4. Amortized Proof & Complexity Chart: Interactive Chart.js benchmark and loop execution proof.
+        5. Deep Dive Concept Catalog: Tabbed breakdown with Python code, trade-offs, and pitfall alerts.
+        6. Pattern Identification Matrix: Interactive workbench quiz to reinforce pattern discovery.
+    -->
+
+    <!-- Visualization & Content Choices:
+        - Algorithm Step Visualizer -> Custom HTML Grid + JS State Machine -> Step-by-step execution -> User controls step execution -> No SVG / Uses clean CSS & Unicode icons.
+        - Complexity Benchmarks -> Chart.js Line Chart -> Dynamic curve comparison O(N^3) vs O(N^2) vs O(N) -> Allows visualizing scale impact -> Chart.js Canvas.
+        - Hash Map / Window Tracker -> Styled HTML Key-Value Grid -> Dynamic state updates -> Real-time frequency inspection.
+        - Quiz Workbench -> Interactive JS Buttons & Feedback -> Reinforces decision logic for interviews -> Immediate answer evaluation.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <a href="../../" class="text-xs font-semibold text-slate-500 hover:text-amber-700 whitespace-nowrap">← DsaVault</a>
+                    <span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded text-sm tracking-wide border border-amber-300">O(N) PATH</span>
+                    <h1 class="text-xl font-bold text-slate-900 tracking-tight">Sliding Window & Two Pointers</h1>
+                </div>
+                <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                    <a href="#philosophy" class="text-slate-600 hover:text-amber-600 transition">Philosophy</a>
+                    <a href="#visualizer" class="text-slate-600 hover:text-amber-600 transition">Visualizer Studio</a>
+                    <a href="#complexity" class="text-slate-600 hover:text-amber-600 transition">Amortized O(N) Proof</a>
+                    <a href="#catalog" class="text-slate-600 hover:text-amber-600 transition">Problem Catalog</a>
+                    <a href="#quiz" class="text-slate-600 hover:text-amber-600 transition">Pattern Quiz</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Executive Summary Header -->
+        <section class="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+            <div class="max-w-3xl relative z-10 space-y-4">
+                <div class="inline-flex items-center space-x-2 text-xs font-semibold text-amber-400 bg-amber-950/60 px-3 py-1 rounded-full border border-amber-800/50">
+                    <span>&#128161; First-Principles Algorithmic Optimization</span>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                    Eliminate Redundant Work with Incremental State Tracking
+                </h2>
+                <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                    This interactive guide synthesizes handwritten notes into step-by-step algorithms. Master how Sliding Window and Two Pointers reduce nested loop complexities from <span class="text-rose-400 font-mono font-semibold">O(N³)</span> and <span class="text-amber-400 font-mono font-semibold">O(N²)</span> down to optimal <span class="text-emerald-400 font-mono font-semibold">O(N)</span> time.
+                </p>
+                <div class="pt-2 flex flex-wrap gap-4 text-xs font-mono text-slate-300">
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-amber-400 block font-bold text-base">4 Core Patterns</span> Fixed, Variable, Opposite Ends, 3-Way Partition
+                    </div>
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-emerald-400 block font-bold text-base">O(1) / O(K) Space</span> Dynamic Memory Constraints
+                    </div>
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-indigo-400 block font-bold text-base">2N Pointer Moves</span> Strict Amortized Guarantee
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 1: Philosophy & Evolution -->
+        <section id="philosophy" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">1. The Evolution of Optimization: Subarray Sums</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Understanding why sliding windows exist requires seeing how brute force solutions recompute identical calculations unnecessarily.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Level 1 -->
+                <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">Level 1</span>
+                        <span class="font-mono text-xs text-rose-700 font-bold">O(N³) Time</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-base">Brute Force Triple Loop</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Generates every start point <span class="font-mono text-slate-800">L</span> and end point <span class="font-mono text-slate-800">R</span>, then iterates over every element between them to sum.
+                    </p>
+                    <div class="bg-rose-900 text-rose-100 p-3 rounded-lg font-mono text-xs overflow-x-auto">
+                        for L in range(N):<br>
+                        &nbsp;&nbsp;for R in range(L, N):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;sum = 0<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;for k in range(L, R+1): sum += A[k]
+                    </div>
+                </div>
+
+                <!-- Level 2 -->
+                <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Level 2</span>
+                        <span class="font-mono text-xs text-amber-700 font-bold">O(N²) Time | O(N) Space</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-base">Prefix Sum Array</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Precomputes accumulated sums in memory. Sum from <span class="font-mono text-slate-800">L</span> to <span class="font-mono text-slate-800">R</span> becomes a simple subtraction: <span class="font-mono text-slate-800">P[R] - P[L-1]</span>.
+                    </p>
+                    <div class="bg-slate-900 text-amber-200 p-3 rounded-lg font-mono text-xs overflow-x-auto">
+                        P = precompute_prefix(A)<br>
+                        for L in range(N):<br>
+                        &nbsp;&nbsp;for R in range(L, N):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;sum = P[R] - P[L-1]
+                    </div>
+                </div>
+
+                <!-- Level 3 -->
+                <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Level 3</span>
+                        <span class="font-mono text-xs text-emerald-700 font-bold">O(N²) / O(N) Sliding</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-base">Carry Forward & Sliding Window</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Maintains running state on the fly. As the right edge advances, add <span class="font-mono text-slate-800">A[R]</span> and subtract <span class="font-mono text-slate-800">A[L-1]</span> without restarting.
+                    </p>
+                    <div class="bg-slate-900 text-emerald-300 p-3 rounded-lg font-mono text-xs overflow-x-auto">
+                        # First Principle of Sliding<br>
+                        for L in range(N):<br>
+                        &nbsp;&nbsp;curr_sum = 0<br>
+                        &nbsp;&nbsp;for R in range(L, N):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;curr_sum += A[R]
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Interactive Visualizer Studio -->
+        <section id="visualizer" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider">
+                        <span>&#9881; Interactive Workbench</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900">Algorithm Visualizer Studio</h3>
+                </div>
+
+                <!-- Algorithm Selector Dropdown -->
+                <div class="w-full sm:w-auto">
+                    <label for="algoSelect" class="block text-xs font-medium text-slate-500 mb-1">Select Problem / Pattern</label>
+                    <select id="algoSelect" class="w-full sm:w-72 bg-slate-100 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 p-2.5 font-medium">
+                        <option value="maxSumFixed">1. Max Subarray Sum (Fixed K=3)</option>
+                        <option value="countDistinctFixed">2. Count Distinct Elements (Fixed K=3)</option>
+                        <option value="longestSubarrayVar">3. Longest Subarray Sum <= X (Variable)</option>
+                        <option value="sortColors3Way">4. LC 75: Sort Colors (Dutch Flag)</option>
+                        <option value="squaresSorted">5. LC 977: Squares of Sorted Array</option>
+                        <option value="mergeSorted">6. LC 88: Merge Sorted Array (Backwards)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Algorithm Context Card -->
+            <div id="algoInfoCard" class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <!-- JS populated info -->
+            </div>
+
+            <!-- Main Visualizer Display Frame -->
+            <div class="bg-slate-900 text-white rounded-xl p-6 shadow-inner space-y-6">
+
+                <!-- Array Track Display -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-mono">
+                        <span>ARRAY STATE & POINTER POSITIONS</span>
+                        <span id="windowSizeBadge" class="text-amber-400">Window Size: --</span>
+                    </div>
+                    <div id="arrayContainer" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-6 min-h-[120px]">
+                        <!-- Dynamic Array Elements Rendered Here -->
+                    </div>
+                </div>
+
+                <!-- Secondary Data Structure State (Map / Auxiliary Result Array) -->
+                <div id="auxStateContainer" class="bg-slate-850 border border-slate-800 rounded-lg p-4 space-y-2">
+                    <div class="text-xs font-mono text-slate-400 uppercase tracking-wider flex justify-between">
+                        <span id="auxTitle">Auxiliary Memory / Map State</span>
+                        <span id="auxMetric" class="text-amber-400">--</span>
+                    </div>
+                    <div id="auxContent" class="flex flex-wrap gap-2 text-xs font-mono">
+                        <!-- Dynamic Map/Auxiliary content -->
+                    </div>
+                </div>
+
+                <!-- Control Console & Log Display Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- Controls -->
+                    <div class="md:col-span-5 space-y-4 bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                        <div class="text-xs font-mono text-slate-300 font-semibold uppercase tracking-wider">Playback Controls</div>
+                        <div class="flex items-center space-x-2">
+                            <button id="btnPrev" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-40">&#9198; Prev</button>
+                            <button id="btnPlay" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg transition">&#9654; Play</button>
+                            <button id="btnNext" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-40">Next &#9197;</button>
+                            <button id="btnReset" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs font-bold rounded-lg transition">&#8634; Reset</button>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-mono pt-2">
+                            <span>Speed:</span>
+                            <input type="range" id="speedRange" min="300" max="2000" step="100" value="800" class="w-32 accent-amber-500 cursor-pointer">
+                            <span id="speedVal" class="w-12 text-right">800ms</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Execution Step Log -->
+                    <div class="md:col-span-7 bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-between space-y-2">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span>STEP COMMENTARY & ANALYSIS</span>
+                            <span id="stepCounter" class="text-emerald-400 font-bold">Step 0 / 0</span>
+                        </div>
+                        <div id="logText" class="text-xs sm:text-sm text-slate-200 font-mono leading-relaxed h-20 overflow-y-auto custom-scroll pr-2">
+                            Select an algorithm or click Play to begin execution...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Time Complexity & Amortized O(N) Proof -->
+        <section id="complexity" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">
+                    <span>&#128200; Mathematical Proof</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Why are Variable Windows O(N) despite Nested Loops?</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    A common interview trap is assuming a <span class="font-mono bg-slate-100 text-rose-600 px-1.5 py-0.5 rounded">while</span> loop inside a <span class="font-mono bg-slate-100 text-rose-600 px-1.5 py-0.5 rounded">for</span> loop automatically equals <span class="font-mono text-slate-900 font-semibold">O(N²)</span>. Here is the formal Amortized Analysis.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Left: Proof Logic Text -->
+                <div class="lg:col-span-6 space-y-4 text-sm text-slate-700 leading-relaxed">
+                    <div class="bg-slate-50 border-l-4 border-amber-500 p-4 rounded-r-lg space-y-2">
+                        <h4 class="font-bold text-slate-900 text-base">The Two-Pointer Invariant</h4>
+                        <p class="text-xs text-slate-600">
+                            In a variable window, the outer pointer <span class="font-mono text-amber-700 font-semibold">R</span> moves from <span class="font-mono">0</span> to <span class="font-mono">N-1</span> (exactly N steps). The inner pointer <span class="font-mono text-indigo-700 font-semibold">L</span> only moves <strong>forward</strong>, never backward.
+                        </p>
+                    </div>
+
+                    <ul class="space-y-2 text-xs sm:text-sm">
+                        <li class="flex items-start space-x-2">
+                            <span class="text-emerald-500 font-bold">&#10003;</span>
+                            <span><strong>R Pointer:</strong> Incremented exactly <span class="font-mono font-semibold">N</span> times in the main loop.</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-emerald-500 font-bold">&#10003;</span>
+                            <span><strong>L Pointer:</strong> Starts at <span class="font-mono">0</span> and can at most reach <span class="font-mono">N-1</span> across the <em>entire execution of the algorithm</em>.</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-emerald-500 font-bold">&#10003;</span>
+                            <span><strong>Total Pointer Operations:</strong> At most <span class="font-mono font-semibold text-emerald-700">N (for R) + N (for L) = 2N = O(N)</span>.</span>
+                        </li>
+                    </ul>
+
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-xs text-emerald-900">
+                        <span class="font-bold block mb-1">Key Takeaway for Technical Interviews:</span>
+                        Do not count iterations per outer loop turn. Count the total lifetime operations of the pointers!
+                    </div>
+                </div>
+
+                <!-- Right: Chart.js Container -->
+                <div class="lg:col-span-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div class="text-xs font-mono text-slate-500 mb-2 text-center">
+                        Operation Growth Rate Comparison (N vs Ops)
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="complexityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Deep Dive Problem Catalog -->
+        <section id="catalog" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">
+                    <span>&#128218; Notes Reference</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Complete Problem Deep Dive & Code Solutions</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Detailed breakdowns, code templates, and critical engineering edge cases derived directly from the handwritten notes.
+                </p>
+            </div>
+
+            <!-- Problem Tabs -->
+            <div class="border-b border-slate-200 overflow-x-auto">
+                <div class="flex space-x-4 min-w-max pb-1" id="problemTabs">
+                    <button data-tab="tab-max-sum" class="tab-btn px-4 py-2 border-b-2 border-amber-500 text-amber-700 font-bold text-sm">Max Sum Subarray K</button>
+                    <button data-tab="tab-count-distinct" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">Count Distinct K</button>
+                    <button data-tab="tab-longest-var" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">Longest Subarray Sum &lt;= X</button>
+                    <button data-tab="tab-squares" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">LC 977: Squares Array</button>
+                    <button data-tab="tab-merge" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">LC 88: Merge Sorted</button>
+                    <button data-tab="tab-dutch" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">LC 75: Sort Colors</button>
+                </div>
+            </div>
+
+            <!-- Tab Content Containers -->
+            <div id="tabContents" class="pt-2">
+
+                <!-- Tab 1: Max Sum Subarray -->
+                <div id="tab-max-sum" class="tab-content space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">Max Subarray Sum of Size K</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Given an integer array <span class="font-mono text-slate-800">A</span> and size <span class="font-mono text-slate-800">K</span>, find the maximum sum among all contiguous subarrays of length <span class="font-mono text-slate-800">K</span>.
+                            </p>
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs space-y-1 text-amber-900">
+                                <div class="font-bold">&#9733; Core Sliding Window Template:</div>
+                                <div>1. Pre-calculate sum of the first window <span class="font-mono">[0...K-1]</span>.</div>
+                                <div>2. Slide from index <span class="font-mono">K</span> to <span class="font-mono">N-1</span>: add <span class="font-mono">A[i]</span>, subtract <span class="font-mono">A[i-K]</span>.</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">max_subarray_sum</span>(A, k):
+    <span class="text-slate-500"># 1. Build initial window</span>
+    window_sum = sum(A[:k])
+    max_sum = window_sum
+    
+    <span class="text-slate-500"># 2. Slide window across array</span>
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(k, len(A)):
+        window_sum += A[i] - A[i - k]  <span class="text-slate-500"># Add incoming, drop outgoing</span>
+        max_sum = max(max_sum, window_sum)
+        
+    <span class="text-amber-400">return</span> max_sum</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Count Distinct Elements -->
+                <div id="tab-count-distinct" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">Count Distinct Elements in Subarrays of Size K</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Tracks unique element counts in every window of size <span class="font-mono">K</span> using a Hash Map frequency counter.
+                            </p>
+                            <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-900 space-y-1">
+                                <div class="font-bold text-rose-800">&#9888; CRITICAL ENGINE PITFALL:</div>
+                                <div>When an element's count reaches <span class="font-mono text-rose-950 font-bold">0</span> after sliding out, you <strong>MUST explicitly delete key from hash map</strong>! Otherwise <span class="font-mono">len(map)</span> will incorrectly include 0-frequency keys.</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">count_distinct_elements</span>(A, k):
+    counts = {}
+    ans = []
+    
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(k):
+        counts[A[i]] = counts.get(A[i], 0) + 1
+    ans.append(len(counts))
+    
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(k, len(A)):
+        counts[A[i]] = counts.get(A[i], 0) + 1
+        counts[A[i-k]] -= 1
+        <span class="text-amber-400">if</span> counts[A[i-k]] == 0:
+            <span class="text-rose-400">del counts[A[i-k]]</span>  <span class="text-slate-500"># CRITICAL cleanup!</span>
+        ans.append(len(counts))
+        
+    <span class="text-amber-400">return</span> ans</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Longest Subarray Variable -->
+                <div id="tab-longest-var" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">Longest Subarray with Sum &lt;= X</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Variable window pattern. Expand <span class="font-mono">R</span> pointer to grow window. When constraint is violated (<span class="font-mono">sum &gt; X</span>), shrink from left by advancing <span class="font-mono">L</span> pointer until valid.
+                            </p>
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900 font-mono">
+                                Window Length Formula: R - L + 1<br>
+                                Shrink Condition: sum &gt; X
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">longest_subarray</span>(A, x):
+    L = 0
+    curr_sum = 0
+    max_len = 0
+    
+    <span class="text-amber-400">for</span> R <span class="text-amber-400">in</span> range(len(A)):
+        curr_sum += A[R]
+        
+        <span class="text-slate-500"># Shrink window from left until valid</span>
+        <span class="text-amber-400">while</span> curr_sum > x <span class="text-amber-400">and</span> L <= R:
+            curr_sum -= A[L]
+            L += 1
+            
+        max_len = max(max_len, R - L + 1)
+    <span class="text-amber-400">return</span> max_len</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Squares Sorted -->
+                <div id="tab-squares" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">LC 977: Squares of a Sorted Array</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Given array sorted in non-decreasing order with negatives. Return sorted squares in <span class="font-mono">O(N)</span>.
+                            </p>
+                            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-xs text-indigo-900 space-y-1">
+                                <div class="font-bold">&#128161; Mathematical Insight:</div>
+                                <div>Due to negative numbers, the largest squares are guaranteed to be at the <strong>extremes</strong> (far left or far right). Fill the result array <strong>back-to-front</strong>!</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">sortedSquares</span>(nums):
+    n = len(nums)
+    res = [0] * n
+    L, R = 0, n - 1
+    
+    <span class="text-slate-500"># Fill from back to front</span>
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(n - 1, -1, -1):
+        <span class="text-amber-400">if</span> abs(nums[L]) > abs(nums[R]):
+            res[i] = nums[L] ** 2
+            L += 1
+        <span class="text-amber-400">else</span>:
+            res[i] = nums[R] ** 2
+            R -= 1
+    <span class="text-amber-400">return</span> res</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Merge Sorted Array -->
+                <div id="tab-merge" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">LC 88: Merge Sorted Array In-Place</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Merge <span class="font-mono">nums2</span> into <span class="font-mono">nums1</span> as one sorted array. <span class="font-mono">nums1</span> has size <span class="font-mono">m+n</span> with trailing zero buffer space.
+                            </p>
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+                                <span class="font-bold">Engineering Edge Case:</span> Merging from front overwrites unprocessed elements in <span class="font-mono">nums1</span>. Always compare and fill <strong>backwards</strong> from index <span class="font-mono">m+n-1</span>!
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">merge</span>(nums1, m, nums2, n):
+    i, j, k = m - 1, n - 1, m + n - 1
+    
+    <span class="text-amber-400">while</span> i >= 0 <span class="text-amber-400">and</span> j >= 0:
+        <span class="text-amber-400">if</span> nums1[i] > nums2[j]:
+            nums1[k] = nums1[i]
+            i -= 1
+        <span class="text-amber-400">else</span>:
+            nums1[k] = nums2[j]
+            j -= 1
+        k -= 1
+        
+    <span class="text-slate-500"># Fill remaining elements from nums2 if any</span>
+    <span class="text-amber-400">while</span> j >= 0:
+        nums1[k] = nums2[j]
+        j -= 1
+        k -= 1</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 6: Dutch National Flag -->
+                <div id="tab-dutch" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">LC 75: Sort Colors (Dutch National Flag)</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Partition array of 0s, 1s, and 2s in-place in a single pass using 3 pointers (<span class="font-mono text-rose-600">L</span>, <span class="font-mono text-slate-600">mid</span>, <span class="font-mono text-indigo-600">R</span>).
+                            </p>
+                            <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-900 space-y-1">
+                                <div class="font-bold text-rose-800">&#9888; CRITICAL POINTER TRAP:</div>
+                                <div>When <span class="font-mono">nums[mid] == 2</span>, swap with <span class="font-mono">R</span> and decrement <span class="font-mono">R</span>. <strong>DO NOT increment mid</strong>! The value swapped from <span class="font-mono">R</span> is unexamined and must be checked on the next iteration.</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">sortColors</span>(nums):
+    L, mid, R = 0, 0, len(nums) - 1
+    
+    <span class="text-amber-400">while</span> mid <= R:
+        <span class="text-amber-400">if</span> nums[mid] == 0:
+            nums[L], nums[mid] = nums[mid], nums[L]
+            L += 1
+            mid += 1
+        <span class="text-amber-400">elif</span> nums[mid] == 1:
+            mid += 1
+        <span class="text-amber-400">else</span>:  <span class="text-slate-500"># nums[mid] == 2</span>
+            nums[mid], nums[R] = nums[R], nums[mid]
+            R -= 1  <span class="text-rose-400"># DO NOT advance mid here!</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 5: Pattern Identification Workbench Quiz -->
+        <section id="quiz" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">
+                    <span>&#129300; Pattern Recognition Quiz</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Which Pattern Should You Use?</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Test your ability to spot sliding window vs two pointer problems from problem statements.
+                </p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-6">
+                <div id="quizQuestionBox" class="space-y-4">
+                    <!-- Dynamic Question Loaded via JS -->
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-xs text-slate-500 font-mono">
+                    <span id="quizScore">Score: 0 / 0</span>
+                    <button id="btnNextQuiz" class="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition font-sans text-xs font-bold">Next Question &#10095;</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="font-mono text-slate-300">Sliding Window & Two Pointers Masterclass &bull; Single-Page Interactive Application</p>
+            <p class="text-slate-500">Designed for first-principles learning, algorithm analysis, and coding interview preparation.</p>
+        </div>
+    </footer>
+
+    <!-- Application JavaScript Engine -->
+    <script>
+        // ==========================================
+        // DATA STRUCTURES & ALGORITHM VISUALIZERS
+        // ==========================================
+
+        const algoConfigs = {
+            maxSumFixed: {
+                title: "Max Subarray Sum of Size K",
+                type: "Fixed Window (K=3)",
+                desc: "Find contiguous subarray of length K=3 with maximum sum.",
+                array: [1, 7, 5, 3, 8, 11, -6, 2],
+                k: 3,
+                steps: [
+                    { L: 0, R: 0, sum: 1, max: 1, log: "Init: Start building first window. Add A[0] = 1.", aux: "First window building...", auxLabel: "Window Sum" },
+                    { L: 0, R: 1, sum: 8, max: 8, log: "Add A[1] = 7. Window sum is now 8.", aux: "Sum = 8", auxLabel: "Window Sum" },
+                    { L: 0, R: 2, sum: 13, max: 13, log: "Add A[2] = 5. First full window [1, 7, 5] complete. Max sum = 13.", aux: "Max = 13", auxLabel: "Current Max" },
+                    { L: 1, R: 3, sum: 15, max: 15, log: "Slide to index 3. Subtract A[0]=1, add A[3]=3. New sum = 15. New max sum = 15!", aux: "Max = 15", auxLabel: "Current Max" },
+                    { L: 2, R: 4, sum: 16, max: 16, log: "Slide to index 4. Subtract A[1]=7, add A[4]=8. New sum = 16. New max sum = 16!", aux: "Max = 16", auxLabel: "Current Max" },
+                    { L: 3, R: 5, sum: 22, max: 22, log: "Slide to index 5. Subtract A[2]=5, add A[5]=11. New sum = 22. New max sum = 22!", aux: "Max = 22", auxLabel: "Current Max" },
+                    { L: 4, R: 6, sum: 13, max: 22, log: "Slide to index 6. Subtract A[3]=3, add A[6]=-6. New sum = 13. Max remains 22.", aux: "Max = 22", auxLabel: "Current Max" },
+                    { L: 5, R: 7, sum: 7, max: 22, log: "Slide to index 7. Subtract A[4]=8, add A[7]=2. New sum = 7. Max remains 22.", aux: "Max = 22", auxLabel: "Current Max" },
+                ]
+            },
+            countDistinctFixed: {
+                title: "Count Distinct Elements in Every Window of Size K",
+                type: "Fixed Window + Hash Map",
+                desc: "Maintain frequency hash map while sliding window of K=3.",
+                array: [1, 2, 1, 3, 4, 2, 5],
+                k: 3,
+                steps: [
+                    { L: 0, R: 0, map: { 1: 1 }, ans: [], log: "Building window: Add A[0]=1. Map = {1:1}", aux: "Map: {1: 1}", auxLabel: "Hash Map State" },
+                    { L: 0, R: 1, map: { 1: 1, 2: 1 }, ans: [], log: "Add A[1]=2. Map = {1:1, 2:1}", aux: "Map: {1: 1, 2: 1}", auxLabel: "Hash Map State" },
+                    { L: 0, R: 2, map: { 1: 2, 2: 1 }, ans: [2], log: "Add A[2]=1. Window [1, 2, 1] complete. Distinct elements = 2.", aux: "Ans = [2]", auxLabel: "Results" },
+                    { L: 1, R: 3, map: { 1: 1, 2: 1, 3: 1 }, ans: [2, 3], log: "Slide to index 3 (A[3]=3). Decrement A[0]=1 (count drops to 1). Add 3. Distinct = 3.", aux: "Ans = [2, 3]", auxLabel: "Results" },
+                    { L: 2, R: 4, map: { 1: 1, 3: 1, 4: 1 }, ans: [2, 3, 3], log: "Slide to index 4 (A[4]=4). Decrement A[1]=2 -> count 0 -> DELETED from map! Add 4. Distinct = 3.", aux: "Ans = [2, 3, 3]", auxLabel: "Results" },
+                    { L: 3, R: 5, map: { 3: 1, 4: 1, 2: 1 }, ans: [2, 3, 3, 3], log: "Slide to index 5 (A[5]=2). Decrement A[2]=1 -> count 0 -> DELETED! Add 2. Distinct = 3.", aux: "Ans = [2, 3, 3, 3]", auxLabel: "Results" },
+                    { L: 4, R: 6, map: { 4: 1, 2: 1, 5: 1 }, ans: [2, 3, 3, 3, 3], log: "Slide to index 6 (A[6]=5). Decrement A[3]=3 -> count 0 -> DELETED! Add 5. Distinct = 3.", aux: "Ans = [2, 3, 3, 3, 3]", auxLabel: "Results" },
+                ]
+            },
+            longestSubarrayVar: {
+                title: "Longest Subarray with Sum <= X (X=10)",
+                type: "Variable Window",
+                desc: "Expand R pointer. Shrink L pointer whenever sum exceeds 10.",
+                array: [1, 7, 8, 5, 6, 4, 3, 2],
+                x: 10,
+                steps: [
+                    { L: 0, R: 0, sum: 1, maxLen: 1, log: "Add A[0]=1. Sum=1 <= 10. Valid! Len = 1, MaxLen = 1.", aux: "Max Len = 1", auxLabel: "Best Length" },
+                    { L: 0, R: 1, sum: 8, maxLen: 2, log: "Add A[1]=7. Sum=8 <= 10. Valid! Len = 2, MaxLen = 2.", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 1, R: 2, sum: 15, maxLen: 2, log: "Add A[2]=8. Sum=16 > 10! INVALID! Shrink L: remove A[0]=1 -> Sum=15.", aux: "Shrinking...", auxLabel: "State" },
+                    { L: 2, R: 2, sum: 8, maxLen: 2, log: "Shrink L again: remove A[1]=7 -> Sum=8 <= 10. Valid window [8]. Len=1.", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 3, R: 3, sum: 5, maxLen: 2, log: "Add A[3]=5 -> Sum=13 > 10. Shrink L: remove A[2]=8 -> Sum=5 <= 10. Window [5].", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 4, R: 4, sum: 6, maxLen: 2, log: "Add A[4]=6 -> Sum=11 > 10. Shrink L: remove A[3]=5 -> Sum=6 <= 10. Window [6].", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 4, R: 5, sum: 10, maxLen: 2, log: "Add A[5]=4 -> Sum=10 <= 10. Valid window [6, 4]. Len=2, MaxLen=2.", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 5, R: 6, sum: 7, maxLen: 2, log: "Add A[6]=3 -> Sum=13 > 10. Shrink L: remove A[4]=6 -> Sum=7 <= 10. Window [4, 3].", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 5, R: 7, sum: 9, maxLen: 3, log: "Add A[7]=2 -> Sum=9 <= 10. Valid window [4, 3, 2]. Len=3! NEW MAX LEN = 3!", aux: "Max Len = 3", auxLabel: "Best Length" },
+                ]
+            },
+            sortColors3Way: {
+                title: "LC 75: Sort Colors (Dutch National Flag)",
+                type: "3-Way Partition (Two Pointers)",
+                desc: "Sort 0s, 1s, and 2s using 3 pointers: L (zeros boundary), mid (scannner), R (twos boundary).",
+                array: [2, 0, 2, 1, 1, 0],
+                steps: [
+                    { L: 0, mid: 0, R: 5, arr: [2, 0, 2, 1, 1, 0], log: "Init: mid=0, A[0]=2. Swap A[mid] with A[R]. Decrement R to 4. mid stays at 0!", aux: "L=0, mid=0, R=4", auxLabel: "Pointer State" },
+                    { L: 0, mid: 0, R: 4, arr: [0, 0, 2, 1, 1, 2], log: "mid=0, A[0]=0. Swap A[mid] with A[L]. Increment L to 1, mid to 1.", aux: "L=1, mid=1, R=4", auxLabel: "Pointer State" },
+                    { L: 1, mid: 1, R: 4, arr: [0, 0, 2, 1, 1, 2], log: "mid=1, A[1]=0. Swap A[mid] with A[L]. Increment L to 2, mid to 2.", aux: "L=2, mid=2, R=4", auxLabel: "Pointer State" },
+                    { L: 2, mid: 2, R: 3, arr: [0, 0, 1, 1, 2, 2], log: "mid=2, A[2]=2. Swap A[mid] with A[R] (R=4). Decrement R to 3. mid stays at 2!", aux: "L=2, mid=2, R=3", auxLabel: "Pointer State" },
+                    { L: 2, mid: 3, R: 3, arr: [0, 0, 1, 1, 2, 2], log: "mid=2, A[2]=1. Just increment mid to 3.", aux: "L=2, mid=3, R=3", auxLabel: "Pointer State" },
+                    { L: 2, mid: 4, R: 3, arr: [0, 0, 1, 1, 2, 2], log: "mid=3, A[3]=1. Increment mid to 4. Now mid > R (4 > 3). Partitioning Complete!", aux: "SORTED!", auxLabel: "Status" },
+                ]
+            },
+            squaresSorted: {
+                title: "LC 977: Squares of a Sorted Array",
+                type: "Opposite Ends Two Pointers",
+                desc: "Fill result array backwards by comparing absolute values at left and right extremes.",
+                array: [-4, -1, 0, 3, 10],
+                steps: [
+                    { L: 0, R: 4, i: 4, res: [0, 0, 0, 0, 0], log: "Compare |-4|=4 vs |10|=10. 10 is larger -> res[4] = 100. Decrement R to 3.", aux: "res = [0, 0, 0, 0, 100]", auxLabel: "Result Array" },
+                    { L: 0, R: 3, i: 3, res: [0, 0, 0, 0, 100], log: "Compare |-4|=4 vs |3|=3. 4 is larger -> res[3] = 16. Increment L to 1.", aux: "res = [0, 0, 0, 16, 100]", auxLabel: "Result Array" },
+                    { L: 1, R: 3, i: 2, res: [0, 0, 0, 16, 100], log: "Compare |-1|=1 vs |3|=3. 3 is larger -> res[2] = 9. Decrement R to 2.", aux: "res = [0, 0, 9, 16, 100]", auxLabel: "Result Array" },
+                    { L: 1, R: 2, i: 1, res: [0, 0, 9, 16, 100], log: "Compare |-1|=1 vs |0|=0. 1 is larger -> res[1] = 1. Increment L to 2.", aux: "res = [0, 1, 9, 16, 100]", auxLabel: "Result Array" },
+                    { L: 2, R: 2, i: 0, res: [0, 1, 9, 16, 100], log: "L == R (index 2, val 0). res[0] = 0. Array fully sorted in O(N)!", aux: "res = [0, 1, 9, 16, 100]", auxLabel: "Result Array" },
+                ]
+            },
+            mergeSorted: {
+                title: "LC 88: Merge Sorted Array In-Place",
+                type: "Backwards Two Pointers",
+                desc: "Compare elements from back of nums1 (m=3) and nums2 (n=3), filling into buffer backwards.",
+                array: [1, 2, 3, 0, 0, 0],
+                nums2: [2, 5, 6],
+                steps: [
+                    { i: 2, j: 2, k: 5, arr: [1, 2, 3, 0, 0, 0], log: "Compare nums1[2]=3 vs nums2[2]=6. 6 > 3 -> Place 6 at nums1[5]. Dec j, k.", aux: "nums2 = [2, 5, 6]", auxLabel: "Array 2" },
+                    { i: 2, j: 1, k: 4, arr: [1, 2, 3, 0, 0, 6], log: "Compare nums1[2]=3 vs nums2[1]=5. 5 > 3 -> Place 5 at nums1[4]. Dec j, k.", aux: "nums2 = [2, 5, 6]", auxLabel: "Array 2" },
+                    { i: 2, j: 0, k: 3, arr: [1, 2, 3, 0, 5, 6], log: "Compare nums1[2]=3 vs nums2[0]=2. 3 > 2 -> Place 3 at nums1[3]. Dec i, k.", aux: "nums2 = [2, 5, 6]", auxLabel: "Array 2" },
+                    { i: 1, j: 0, k: 2, arr: [1, 2, 3, 3, 5, 6], log: "Compare nums1[1]=2 vs nums2[0]=2. Equal -> Place 2 at nums1[2]. Dec i, k.", aux: "nums2 = [2, 5, 6]", auxLabel: "Array 2" },
+                    { i: 0, j: 0, k: 1, arr: [1, 2, 2, 3, 5, 6], log: "Compare nums1[0]=1 vs nums2[0]=2. 2 > 1 -> Place 2 at nums1[1]. Dec j, k.", aux: "nums2 = [2, 5, 6]", auxLabel: "Array 2" },
+                    { i: 0, j: -1, k: 0, arr: [1, 2, 2, 3, 5, 6], log: "nums2 exhausted (j < 0). Remaining elements in nums1 are already in place. Done!", aux: "MERGED!", auxLabel: "Status" },
+                ]
+            }
+        };
+
+        // Visualizer State Engine Variables
+        let currentAlgoKey = "maxSumFixed";
+        let currentStepIdx = 0;
+        let isPlaying = false;
+        let playTimer = null;
+        let playSpeed = 800;
+
+        // UI DOM Elements
+        const algoSelect = document.getElementById("algoSelect");
+        const algoInfoCard = document.getElementById("algoInfoCard");
+        const arrayContainer = document.getElementById("arrayContainer");
+        const auxTitle = document.getElementById("auxTitle");
+        const auxMetric = document.getElementById("auxMetric");
+        const auxContent = document.getElementById("auxContent");
+        const windowSizeBadge = document.getElementById("windowSizeBadge");
+        const logText = document.getElementById("logText");
+        const stepCounter = document.getElementById("stepCounter");
+        const btnPrev = document.getElementById("btnPrev");
+        const btnNext = document.getElementById("btnNext");
+        const btnPlay = document.getElementById("btnPlay");
+        const btnReset = document.getElementById("btnReset");
+        const speedRange = document.getElementById("speedRange");
+        const speedVal = document.getElementById("speedVal");
+
+        // Render Visualizer State
+        function renderStep() {
+            const config = algoConfigs[currentAlgoKey];
+            const step = config.steps[currentStepIdx];
+
+            // 1. Render Info Card
+            algoInfoCard.innerHTML = `
+                <div>
+                    <span class="font-bold text-slate-900 text-base">${config.title}</span>
+                    <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded bg-amber-200 text-amber-800">${config.type}</span>
+                    <p class="text-xs text-slate-600 mt-1">${config.desc}</p>
+                </div>
+            `;
+
+            // 2. Render Main Array
+            let arrToRender = step.arr || config.array;
+            arrayContainer.innerHTML = "";
+
+            arrToRender.forEach((val, idx) => {
+                const cell = document.createElement("div");
+                cell.className = "array-cell relative flex flex-col items-center justify-center w-10 h-12 sm:w-12 sm:h-14 rounded-lg font-mono font-bold text-sm sm:text-base border-2 shadow-sm transition-all";
+
+                // Highlight active window vs normal cells
+                let inWindow = false;
+                if (step.L !== undefined && step.R !== undefined) {
+                    if (idx >= step.L && idx <= step.R) inWindow = true;
+                }
+
+                if (inWindow) {
+                    cell.classList.add("bg-amber-500", "text-slate-950", "border-amber-300", "scale-105", "shadow-amber-500/20");
+                } else {
+                    cell.classList.add("bg-slate-800", "text-slate-200", "border-slate-700");
+                }
+
+                // Render cell value
+                cell.innerText = val;
+
+                // Index indicator
+                const idxSpan = document.createElement("span");
+                idxSpan.className = "absolute -bottom-5 text-[10px] font-mono text-slate-400";
+                idxSpan.innerText = `[${idx}]`;
+                cell.appendChild(idxSpan);
+
+                // Pointer badges
+                const pointerContainer = document.createElement("div");
+                pointerContainer.className = "absolute -top-6 flex space-x-1";
+
+                if (step.L === idx) {
+                    const badge = document.createElement("span");
+                    badge.className = "pointer-badge text-[10px] bg-rose-500 text-white font-bold px-1 rounded shadow";
+                    badge.innerText = "L";
+                    pointerContainer.appendChild(badge);
+                }
+                if (step.R === idx) {
+                    const badge = document.createElement("span");
+                    badge.className = "pointer-badge text-[10px] bg-indigo-500 text-white font-bold px-1 rounded shadow";
+                    badge.innerText = "R";
+                    pointerContainer.appendChild(badge);
+                }
+                if (step.mid === idx) {
+                    const badge = document.createElement("span");
+                    badge.className = "pointer-badge text-[10px] bg-emerald-500 text-white font-bold px-1 rounded shadow";
+                    badge.innerText = "mid";
+                    pointerContainer.appendChild(badge);
+                }
+                if (step.i === idx) {
+                    const badge = document.createElement("span");
+                    badge.className = "pointer-badge text-[10px] bg-sky-400 text-slate-950 font-bold px-1 rounded shadow";
+                    badge.innerText = "i";
+                    pointerContainer.appendChild(badge);
+                }
+
+                cell.appendChild(pointerContainer);
+                arrayContainer.appendChild(cell);
+            });
+
+            // 3. Update Auxiliary Data Display
+            auxTitle.innerText = step.auxLabel || "Auxiliary Memory";
+            auxMetric.innerText = step.aux || "--";
+            auxContent.innerHTML = "";
+
+            if (step.map) {
+                Object.entries(step.map).forEach(([k, v]) => {
+                    const tag = document.createElement("span");
+                    tag.className = "bg-slate-800 text-amber-300 px-2.5 py-1 rounded border border-slate-700";
+                    tag.innerText = `'${k}': ${v}`;
+                    auxContent.appendChild(tag);
+                });
+            } else if (step.res) {
+                const resTag = document.createElement("div");
+                resTag.className = "text-emerald-400 font-bold tracking-widest";
+                resTag.innerText = `[ ${step.res.join(", ")} ]`;
+                auxContent.appendChild(resTag);
+            } else if (config.nums2) {
+                const tag = document.createElement("span");
+                tag.className = "text-slate-300";
+                tag.innerText = `nums2 = [ ${config.nums2.join(", ")} ]`;
+                auxContent.appendChild(tag);
+            } else {
+                const tag = document.createElement("span");
+                tag.className = "text-slate-400 italic";
+                tag.innerText = "No secondary data structure overhead";
+                auxContent.appendChild(tag);
+            }
+
+            // 4. Update Window Badge & Counter
+            if (step.L !== undefined && step.R !== undefined) {
+                windowSizeBadge.innerText = `Window Size: ${step.R - step.L + 1}`;
+            } else {
+                windowSizeBadge.innerText = `Mode: Pointer Scanning`;
+            }
+
+            stepCounter.innerText = `Step ${currentStepIdx + 1} / ${config.steps.length}`;
+            logText.innerText = step.log;
+
+            // 5. Button Disable States
+            btnPrev.disabled = currentStepIdx === 0;
+            btnNext.disabled = currentStepIdx === config.steps.length - 1;
+        }
+
+        // Playback Engine
+        function togglePlay() {
+            if (isPlaying) {
+                pause();
+            } else {
+                isPlaying = true;
+                btnPlay.innerText = "❚❚ Pause";
+                btnPlay.classList.replace("bg-amber-600", "bg-rose-600");
+                playTimer = setInterval(() => {
+                    const config = algoConfigs[currentAlgoKey];
+                    if (currentStepIdx < config.steps.length - 1) {
+                        currentStepIdx++;
+                        renderStep();
+                    } else {
+                        pause();
+                    }
+                }, playSpeed);
+            }
+        }
+
+        function pause() {
+            isPlaying = false;
+            clearInterval(playTimer);
+            btnPlay.innerText = "▶ Play";
+            btnPlay.classList.replace("bg-rose-600", "bg-amber-600");
+        }
+
+        // Event Listeners for Visualizer
+        algoSelect.addEventListener("change", (e) => {
+            pause();
+            currentAlgoKey = e.target.value;
+            currentStepIdx = 0;
+            renderStep();
+        });
+
+        btnNext.addEventListener("click", () => {
+            pause();
+            const config = algoConfigs[currentAlgoKey];
+            if (currentStepIdx < config.steps.length - 1) {
+                currentStepIdx++;
+                renderStep();
+            }
+        });
+
+        btnPrev.addEventListener("click", () => {
+            pause();
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderStep();
+            }
+        });
+
+        btnPlay.addEventListener("click", togglePlay);
+
+        btnReset.addEventListener("click", () => {
+            pause();
+            currentStepIdx = 0;
+            renderStep();
+        });
+
+        speedRange.addEventListener("input", (e) => {
+            playSpeed = parseInt(e.target.value);
+            speedVal.innerText = `${playSpeed}ms`;
+            if (isPlaying) {
+                pause();
+                togglePlay();
+            }
+        });
+
+        // Initialize First Visualizer
+        renderStep();
+
+
+        // ==========================================
+        // CHART.JS AMORTIZED COMPLEXITY GRAPH
+        // ==========================================
+        const ctx = document.getElementById('complexityChart').getContext('2d');
+        const labels = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'O(N³) Triple Loop',
+                        data: labels.map(n => Math.pow(n, 3) / 1000), // scaled down for visibility
+                        borderColor: '#f43f5e',
+                        backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'O(N²) Nested Loops',
+                        data: labels.map(n => Math.pow(n, 2) / 10),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'O(N) Amortized Sliding Window (2N ops)',
+                        data: labels.map(n => 2 * n),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        tension: 0,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#10b981'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { family: 'Inter', size: 11 },
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => `Input Size N = ${items[0].label}`,
+                            label: (item) => `${item.dataset.label}: ~${Math.round(item.raw)} ops`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Input Size (N)', font: { size: 11 } },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Relative Execution Operations', font: { size: 11 } },
+                        grid: { color: '#f1f5f9' }
+                    }
+                }
+            }
+        });
+
+
+        // ==========================================
+        // TAB SWITCHER LOGIC
+        // ==========================================
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-tab');
+
+                tabBtns.forEach(b => {
+                    b.classList.remove('border-amber-500', 'text-amber-700', 'font-bold');
+                    b.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+                });
+
+                btn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+                btn.classList.add('border-amber-500', 'text-amber-700', 'font-bold');
+
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+
+        // ==========================================
+        // PATTERN RECOGNITION QUIZ WORKBENCH
+        // ==========================================
+        const quizQuestions = [
+            {
+                q: "You are given an array of positive integers and a target sum T. Find the length of the SHORTEST contiguous subarray whose sum is >= T.",
+                options: [
+                    "Fixed Sliding Window (Size K)",
+                    "Variable Sliding Window (Expand R, Shrink L when sum >= T)",
+                    "Two Pointers from Opposite Ends",
+                    "Prefix Sum with Binary Search only"
+                ],
+                correct: 1,
+                explain: "Correct! When searching for 'Shortest / Longest subarray with sum condition' on non-negative numbers, a Variable Sliding Window is optimal."
+            },
+            {
+                q: "Find the maximum number of vowels in any contiguous substring of length K.",
+                options: [
+                    "Variable Sliding Window",
+                    "Fixed Sliding Window of Size K",
+                    "Dutch National Flag 3-Way Partition",
+                    "Monotonic Deque"
+                ],
+                correct: 1,
+                explain: "Correct! The window size is fixed at K. Slide a frame of size K across the string, incrementing vowel counts for incoming and decrementing for outgoing characters."
+            },
+            {
+                q: "Given a sorted array, return indices of two numbers such that they add up to a target sum.",
+                options: [
+                    "Fixed Sliding Window",
+                    "Variable Sliding Window",
+                    "Two Pointers starting at Opposite Ends (0 and N-1)",
+                    "Dutch National Flag"
+                ],
+                correct: 2,
+                explain: "Correct! On a SORTED array, place L at index 0 and R at N-1. If sum < target, L++; if sum > target, R--; if equal, target found in O(N)."
+            },
+            {
+                q: "Sort an array containing only values 0, 1, and 2 in a single pass in-place.",
+                options: [
+                    "Dutch National Flag (3 Pointers: L, mid, R)",
+                    "Fixed Sliding Window",
+                    "Merge Sort",
+                    "Two Pointers Fast & Slow"
+                ],
+                correct: 0,
+                explain: "Correct! Dutch National Flag maintains 3 boundaries, classifying 0s to the left, 2s to the right, and 1s in the middle."
+            }
+        ];
+
+        let quizIdx = 0;
+        let quizScore = 0;
+
+        const quizQuestionBox = document.getElementById('quizQuestionBox');
+        const quizScoreText = document.getElementById('quizScore');
+        const btnNextQuiz = document.getElementById('btnNextQuiz');
+
+        function renderQuiz() {
+            const currentQ = quizQuestions[quizIdx];
+            quizQuestionBox.innerHTML = `
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Question ${quizIdx + 1} of ${quizQuestions.length}</span>
+                    <h4 class="text-base font-bold text-slate-900 leading-snug">${currentQ.q}</h4>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2" id="quizOptions">
+                    ${currentQ.options.map((opt, idx) => `
+                        <button onclick="checkAnswer(${idx})" class="option-btn text-left p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs sm:text-sm font-medium text-slate-700 transition">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="quizFeedback" class="hidden text-xs sm:text-sm p-3 rounded-lg font-medium"></div>
+            `;
+            quizScoreText.innerText = `Score: ${quizScore} / ${quizQuestions.length}`;
+        }
+
+        window.checkAnswer = function(selectedIdx) {
+            const currentQ = quizQuestions[quizIdx];
+            const feedback = document.getElementById('quizFeedback');
+            const optionBtns = document.querySelectorAll('.option-btn');
+
+            optionBtns.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === currentQ.correct) {
+                    btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                } else if (idx === selectedIdx) {
+                    btn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-900');
+                }
+            });
+
+            feedback.classList.remove('hidden');
+            if (selectedIdx === currentQ.correct) {
+                quizScore++;
+                feedback.className = "text-xs sm:text-sm p-3 rounded-lg font-medium bg-emerald-50 text-emerald-800 border border-emerald-200";
+                feedback.innerHTML = `<strong>&#10003; Correct!</strong> ${currentQ.explain}`;
+            } else {
+                feedback.className = "text-xs sm:text-sm p-3 rounded-lg font-medium bg-rose-50 text-rose-800 border border-rose-200";
+                feedback.innerHTML = `<strong>&#10007; Incorrect.</strong> ${currentQ.explain}`;
+            }
+
+            quizScoreText.innerText = `Score: ${quizScore} / ${quizQuestions.length}`;
+        };
+
+        btnNextQuiz.addEventListener('click', () => {
+            quizIdx = (quizIdx + 1) % quizQuestions.length;
+            renderQuiz();
+        });
+
+        // Initialize Quiz
+        renderQuiz();
+    </script>
+</body>
+</html>

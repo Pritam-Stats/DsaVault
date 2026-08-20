@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DsaVault — published notes</title>
+  <meta name="description" content="Public interactive DSA notes: arrays, sliding window, two pointers, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="./">
+        <span class="brand-mark">{ }</span>
+        DsaVault
+      </a>
+      <div class="header-actions">
+        <div class="view-toggle" role="group" aria-label="Layout">
+          <button type="button" class="view-btn" id="view-gallery" aria-pressed="true">Gallery</button>
+          <button type="button" class="view-btn" id="view-list" aria-pressed="false">List</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="kicker">Public notes · static site</div>
+      <h1>Interactive DSA notes, published in one place.</h1>
+      <p>
+        Interactive masterclasses from handwritten notes — visualizers, complexity charts, and quizzes.
+      </p>
+    </section>
+
+    <div class="toolbar">
+      <label class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <input id="search" type="search" placeholder="Search notes…" autocomplete="off">
+      </label>
+      <span class="meta-count" id="count"></span>
+    </div>
+
+    <div class="tags" id="tags" role="tablist" aria-label="Filter by topic"></div>
+    <section class="gallery" id="notes" aria-live="polite"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>DsaVault — static notes for GitHub Pages</span>
+      <span>Open a note to run the interactive masterclass</span>
+    </div>
+  </footer>
+
+  <script src="assets/catalog.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

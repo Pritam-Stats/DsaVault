@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Array Techniques & Algorithmic Masterclass</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fffbe3',
+                            100: '#fff3b8',
+                            500: '#d97706',
+                            600: '#b45309',
+                            700: '#92400e',
+                            900: '#451a03',
+                        },
+                        slate: {
+                            850: '#151e2e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Styles & Chart Constraints */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+        .pointer-badge {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .array-cell {
+            transition: all 0.3s ease;
+        }
+        /* Custom scrollbar for log output */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Warm Sand & Technical Slate -->
+
+    <!-- Application Structure Plan:
+        1. Sticky Header & Navigation: Quick section links and context indicator.
+        2. Hero & Core Philosophy: Synthesizing Prefix Sums, Contribution Technique, Sliding Window, and Two Pointers.
+        3. Visualizer Studio: Step-by-step interactive engine supporting 9 distinct array algorithms:
+           - Range Sum Queries (Prefix Sum)
+           - Vowel Count Range Queries (Binary Contribution Prefix)
+           - Subarray Contribution Method (O(N) Sum of all subarrays)
+           - LC 985: Sum of Even Numbers After Queries
+           - LC 31: Next Permutation Mechanics (Dip detection, Swap & Suffix Reversal)
+           - Max Subarray Sum (Fixed Window K=3)
+           - Longest Subarray Sum <= X (Variable Window)
+           - LC 75: Sort Colors (Dutch Flag 3-Way Partition)
+           - LC 977: Squares of Sorted Array (Two Pointers)
+        4. Interactive Contribution Calculator Engine: Hands-on calculator for (i+1)*(n-i) frequency analysis.
+        5. Mathematical Proof & Amortized Complexity Benchmark: Dynamic Chart.js graph comparing O(N^3), O(N^2), O(N), and O(1) query updates.
+        6. Deep-Dive Code Catalog & Pitfalls: Tabbed code templates, line-by-line notes, and interview traps.
+        7. Pattern Recognition Quiz: Dynamic quiz testing optimal algorithm selection.
+    -->
+
+    <!-- Visualization & Content Choices:
+        - Algorithm Step Visualizer -> Custom HTML Grid + JS State Machine -> Step-by-step execution -> User controls step execution -> NO SVG.
+        - Dynamic Contribution Calculator -> Interactive JS input handler + real-time mathematical breakdown table.
+        - Complexity Benchmarks -> Chart.js Line Chart -> Dynamic curve comparison O(N^3) vs O(N^2) vs O(N) vs O(1) -> Chart.js Canvas.
+        - Quiz Workbench -> Interactive JS Buttons & Feedback -> Immediate answer evaluation and rationale.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <a href="../../" class="text-xs font-semibold text-slate-500 hover:text-amber-700 whitespace-nowrap">← DsaVault</a>
+                    <span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded text-sm tracking-wide border border-amber-300">MASTERCLASS</span>
+                    <h1 class="text-xl font-bold text-slate-900 tracking-tight">Array Techniques & Optimization</h1>
+                </div>
+                <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                    <a href="#philosophy" class="text-slate-600 hover:text-amber-600 transition">Philosophy</a>
+                    <a href="#visualizer" class="text-slate-600 hover:text-amber-600 transition">Visualizer Studio</a>
+                    <a href="#calculator" class="text-slate-600 hover:text-amber-600 transition">Contribution Calculator</a>
+                    <a href="#complexity" class="text-slate-600 hover:text-amber-600 transition">Complexity & Proofs</a>
+                    <a href="#catalog" class="text-slate-600 hover:text-amber-600 transition">Problem Catalog</a>
+                    <a href="#quiz" class="text-slate-600 hover:text-amber-600 transition">Pattern Quiz</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Hero Section -->
+        <section class="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+            <div class="max-w-4xl relative z-10 space-y-4">
+                <div class="inline-flex items-center space-x-2 text-xs font-semibold text-amber-400 bg-amber-950/60 px-3 py-1 rounded-full border border-amber-800/50">
+                    <span>&#128161; Lecture & Assignment Masterclass Integration</span>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                    Master Array Manipulations: From Brute Force to $O(1)$ Range Queries & $O(N)$ Invariants
+                </h2>
+                <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                    This interactive platform synthesizes fundamental array techniques—<strong>Prefix Sums</strong>, <strong>Contribution Method</strong>, <strong>Even-Sum Delta Tracking</strong>, <strong>Lexicographical Permutations (Next Permutation)</strong>, <strong>Sliding Windows</strong>, and <strong>Two Pointers</strong>. Learn to eliminate redundant calculations and optimize algorithms from $O(N^3)$ down to $O(N)$ or $O(1)$ query updates.
+                </p>
+                <div class="pt-2 flex flex-wrap gap-4 text-xs font-mono text-slate-300">
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-amber-400 block font-bold text-base">Prefix Sums</span> $O(1)$ Range & Vowel Queries
+                    </div>
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-emerald-400 block font-bold text-base">Contribution</span> $(i+1) \times (n-i)$ Frequency Magic
+                    </div>
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-indigo-400 block font-bold text-base">State Maintenance</span> LC 985 Delta & LC 31 Reversals
+                    </div>
+                    <div class="bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/60">
+                        <span class="text-sky-400 block font-bold text-base">Sliding & Pointers</span> Amortized $2N$ Operations
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 1: Philosophy & Optimization Evolution -->
+        <section id="philosophy" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">1. The Hierarchy of Array Optimization</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Every optimal array algorithm relies on replacing repetitive iteration with math invariants or dynamic state tracking.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Level 1 -->
+                <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">Level 1</span>
+                        <span class="font-mono text-[11px] text-rose-700 font-bold">$O(N^3)$ Brute</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Triple Loop Slicing</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Recomputes sums or subarray elements from scratch for every pair $(L, R)$.
+                    </p>
+                    <div class="bg-rose-900 text-rose-100 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto">
+                        sum = 0<br>
+                        for k in range(L, R+1):<br>
+                        &nbsp;&nbsp;sum += A[k]
+                    </div>
+                </div>
+
+                <!-- Level 2 -->
+                <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Level 2</span>
+                        <span class="font-mono text-[11px] text-amber-700 font-bold">$O(N^2)$ Carry Forward</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Incremental Accumulation</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Reuses the sum of subarray $[L..R-1]$ to calculate sum of $[L..R]$ by adding $A[R]$.
+                    </p>
+                    <div class="bg-slate-900 text-amber-200 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto">
+                        curr_sum = 0<br>
+                        for R in range(L, N):<br>
+                        &nbsp;&nbsp;curr_sum += A[R]
+                    </div>
+                </div>
+
+                <!-- Level 3 -->
+                <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Level 3</span>
+                        <span class="font-mono text-[11px] text-emerald-700 font-bold">$O(N)$ Prefix / Window</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Prefix Sums & Windows</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Precomputes accumulated state ($P[R] - P[L-1]$) or slides window boundaries in $O(N)$ total time.
+                    </p>
+                    <div class="bg-slate-900 text-emerald-300 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto">
+                        # Range Sum<br>
+                        ans = P[R] - P[L-1]<br>
+                        # Sliding: add in, sub out
+                    </div>
+                </div>
+
+                <!-- Level 4 -->
+                <div class="bg-indigo-50/60 border border-indigo-200 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">Level 4</span>
+                        <span class="font-mono text-[11px] text-indigo-700 font-bold">$O(N)$ / $O(1)$ Math</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Contribution & Delta Track</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Calculates frequency contribution $(i+1)(n-i)$ directly or updates global state in $O(1)$ per query.
+                    </p>
+                    <div class="bg-slate-900 text-indigo-300 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto">
+                        # Contribution<br>
+                        sum += A[i]*(i+1)*(n-i)<br>
+                        # Delta: update even_sum
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Interactive Visualizer Studio -->
+        <section id="visualizer" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider">
+                        <span>&#9881; Interactive Execution Engine</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900">Algorithm Visualizer Studio</h3>
+                </div>
+
+                <!-- Algorithm Selector Dropdown -->
+                <div class="w-full sm:w-80">
+                    <label for="algoSelect" class="block text-xs font-medium text-slate-500 mb-1">Select Technique / Problem</label>
+                    <select id="algoSelect" class="w-full bg-slate-100 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 p-2.5 font-medium">
+                        <optgroup label="Prefix Sums & Range Queries">
+                            <option value="prefixSumRange">1. Range Sum Query (Prefix Sum)</option>
+                            <option value="vowelRangeQuery">2. Vowel Count in Range (Binary Mapping)</option>
+                        </optgroup>
+                        <optgroup label="Subarray Math & Delta Updates">
+                            <option value="contributionMethod">3. Sum of All Subarrays (Contribution Method)</option>
+                            <option value="lc985EvenSum">4. LC 985: Even Sum After Queries ($O(1)$ Delta)</option>
+                            <option value="lc31NextPermutation">5. LC 31: Next Permutation (Dip & Reversal)</option>
+                        </optgroup>
+                        <optgroup label="Sliding Window & Two Pointers">
+                            <option value="maxSumFixed">6. Max Subarray Sum (Fixed Window K=3)</option>
+                            <option value="longestSubarrayVar">7. Longest Subarray Sum <= X (Variable)</option>
+                            <option value="sortColors3Way">8. LC 75: Sort Colors (Dutch Flag)</option>
+                            <option value="squaresSorted">9. LC 977: Squares of Sorted Array</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Context Card -->
+            <div id="algoInfoCard" class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <!-- Dynamically Populated -->
+            </div>
+
+            <!-- Main Display Frame -->
+            <div class="bg-slate-900 text-white rounded-xl p-6 shadow-inner space-y-6">
+
+                <!-- Array Track Display -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-mono">
+                        <span>ARRAY STATE & ACTIVE POINTERS</span>
+                        <span id="windowSizeBadge" class="text-amber-400 font-semibold">State: Initializing...</span>
+                    </div>
+                    <div id="arrayContainer" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-6 min-h-[120px]">
+                        <!-- Dynamic Array Elements Rendered Here -->
+                    </div>
+                </div>
+
+                <!-- Secondary Data Structure State (Prefix Array / Map / Query Delta Tracker) -->
+                <div id="auxStateContainer" class="bg-slate-850 border border-slate-800 rounded-lg p-4 space-y-2">
+                    <div class="text-xs font-mono text-slate-400 uppercase tracking-wider flex justify-between">
+                        <span id="auxTitle">Auxiliary Memory / Prefix State</span>
+                        <span id="auxMetric" class="text-amber-400">--</span>
+                    </div>
+                    <div id="auxContent" class="flex flex-wrap gap-2 text-xs font-mono">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <!-- Control Console & Log Display Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- Controls -->
+                    <div class="md:col-span-5 space-y-4 bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                        <div class="text-xs font-mono text-slate-300 font-semibold uppercase tracking-wider">Playback Controls</div>
+                        <div class="flex items-center space-x-2">
+                            <button id="btnPrev" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-40">&#9198; Prev</button>
+                            <button id="btnPlay" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg transition">&#9654; Play</button>
+                            <button id="btnNext" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-40">Next &#9197;</button>
+                            <button id="btnReset" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs font-bold rounded-lg transition">&#8634; Reset</button>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-mono pt-2">
+                            <span>Speed:</span>
+                            <input type="range" id="speedRange" min="300" max="2000" step="100" value="800" class="w-32 accent-amber-500 cursor-pointer">
+                            <span id="speedVal" class="w-12 text-right">800ms</span>
+                        </div>
+                    </div>
+
+                    <!-- Step Log -->
+                    <div class="md:col-span-7 bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-between space-y-2">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span>MECHANICS COMMENTARY & LOG</span>
+                            <span id="stepCounter" class="text-emerald-400 font-bold">Step 0 / 0</span>
+                        </div>
+                        <div id="logText" class="text-xs sm:text-sm text-slate-200 font-mono leading-relaxed h-20 overflow-y-auto custom-scroll pr-2">
+                            Select an algorithm to view visual step execution...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Interactive Contribution Calculator Engine -->
+        <section id="calculator" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">
+                    <span>&#128290; Contribution Method Studio</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Subarray Contribution Formula: $(i + 1) \times (n - i)$</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Calculate the sum of all contiguous subarrays in $O(N)$ time and $O(1)$ space without generating a single subarray. Every element at index $i$ appears in exactly $(i + 1) \times (n - i)$ subarrays!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Controls & Input -->
+                <div class="lg:col-span-5 bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+                    <h4 class="font-bold text-slate-900 text-sm">Interactive Array Input</h4>
+                    <div>
+                        <label for="customContribArray" class="block text-xs font-medium text-slate-600 mb-1">Comma-separated integers:</label>
+                        <input type="text" id="customContribArray" value="1, 2, 3, 4" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 font-mono focus:ring-amber-500 focus:border-amber-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btnCalcContrib" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition">Compute $O(N)$ Contribution</button>
+                        <button id="btnPreset1" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs rounded-lg font-medium">[1,2,3]</button>
+                        <button id="btnPreset2" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs rounded-lg font-medium">[2, 4, 1, 3]</button>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900 space-y-1">
+                        <div class="font-bold">&#128161; Derivation Proof:</div>
+                        <div>1. Number of valid start choices for $A[i]$: $i + 1$ (indices $0..i$).</div>
+                        <div>2. Number of valid end choices for $A[i]$: $n - i$ (indices $i..n-1$).</div>
+                        <div>3. Total Subarray Occurrences $= (i + 1) \times (n - i)$.</div>
+                    </div>
+                </div>
+
+                <!-- Live Mathematical Output Table -->
+                <div class="lg:col-span-7 bg-slate-900 text-slate-100 rounded-xl p-5 shadow-inner space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <span class="text-xs font-mono text-slate-400">ELEMENT FREQUENCY & TOTAL SUM BREAKDOWN</span>
+                        <span id="contribTotalSum" class="text-amber-400 font-mono font-bold text-base">Total Sum: --</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800">
+                                    <th class="pb-2">Index ($i$)</th>
+                                    <th class="pb-2">Val ($A[i]$)</th>
+                                    <th class="pb-2">Starts ($i+1$)</th>
+                                    <th class="pb-2">Ends ($n-i$)</th>
+                                    <th class="pb-2">Count</th>
+                                    <th class="pb-2 text-right">Contribution</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contribTableBody" class="divide-y divide-slate-800/60">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Time Complexity & Benchmark Graphs -->
+        <section id="complexity" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">
+                    <span>&#128200; Benchmark Comparison</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Algorithmic Growth & Amortized Performance</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Visualizing how optimization scales as input size $N$ grows from $10$ to $100$ elements.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Proof Column -->
+                <div class="lg:col-span-5 space-y-4 text-sm text-slate-700 leading-relaxed">
+                    <div class="bg-slate-50 border-l-4 border-amber-500 p-4 rounded-r-lg space-y-2">
+                        <h4 class="font-bold text-slate-900 text-base">Amortized Analysis Guarantees</h4>
+                        <p class="text-xs text-slate-600">
+                            Why are variable window and two-pointer algorithms $O(N)$ despite nested loops?
+                        </p>
+                    </div>
+
+                    <ul class="space-y-2 text-xs sm:text-sm">
+                        <li class="flex items-start space-x-2">
+                            <span class="text-emerald-500 font-bold">&#10003;</span>
+                            <span><strong>Two-Pointer Guarantee:</strong> Right pointer $R$ moves $N$ steps forward. Left pointer $L$ moves at most $N$ steps forward. Total pointer ops: $2N = O(N)$.</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-emerald-500 font-bold">&#10003;</span>
+                            <span><strong>Prefix Sum Queries:</strong> Preprocessing takes $O(N)$ once. Every subsequent range query requires exactly $1$ subtraction: $O(1)$.</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-emerald-500 font-bold">&#10003;</span>
+                            <span><strong>Delta Updates (LC 985):</strong> Modifying array elements and updating even sum happens in $O(1)$ per query instead of $O(N)$ sum recomputation.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Chart.js Container -->
+                <div class="lg:col-span-7 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div class="text-xs font-mono text-slate-500 mb-2 text-center">
+                        Operation Scale vs Input Size $N$
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="complexityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Deep Dive Problem Catalog -->
+        <section id="catalog" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">
+                    <span>&#128218; Reference Notebook</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Complete Algorithm Code & Interview Notes</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Python code snippets, key derivations, and pitfalls extracted directly from the notes.
+                </p>
+            </div>
+
+            <!-- Problem Tabs -->
+            <div class="border-b border-slate-200 overflow-x-auto">
+                <div class="flex space-x-4 min-w-max pb-1" id="problemTabs">
+                    <button data-tab="tab-prefix-sum" class="tab-btn px-4 py-2 border-b-2 border-amber-500 text-amber-700 font-bold text-sm">Range Sum & Vowels</button>
+                    <button data-tab="tab-contrib" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">Contribution Method</button>
+                    <button data-tab="tab-lc985" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">LC 985: Even Sum Queries</button>
+                    <button data-tab="tab-lc31" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">LC 31: Next Permutation</button>
+                    <button data-tab="tab-sliding" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">Sliding Windows</button>
+                    <button data-tab="tab-pointers" class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">Two Pointers & Dutch Flag</button>
+                </div>
+            </div>
+
+            <!-- Tab Content Containers -->
+            <div id="tabContents" class="pt-2">
+
+                <!-- Tab 1: Range Sum & Vowels -->
+                <div id="tab-prefix-sum" class="tab-content space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">Prefix Sum & Binary Mapping</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Precompute cumulative sums in $O(N)$ time. Range sum for index range $[L..R]$ becomes $P[R] - P[L-1]$ ($O(1)$ time).
+                            </p>
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs space-y-1 text-amber-900">
+                                <div class="font-bold">&#128161; Vowel Range Queries:</div>
+                                <div>Convert string to binary array: $1$ if vowel, $0$ otherwise. Build prefix sum on binary array! Range query returns exact vowel count.</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">vowel_range_queries</span>(s, queries):
+    vowels = {<span class="text-sky-300">'a'</span>, <span class="text-sky-300">'e'</span>, <span class="text-sky-300">'i'</span>, <span class="text-sky-300">'o'</span>, <span class="text-sky-300">'u'</span>}
+    n = len(s)
+    
+    <span class="text-slate-500"># 1. Build binary contribution & prefix sum</span>
+    P = [<span class="text-amber-300">0</span>] * n
+    curr = <span class="text-amber-300">0</span>
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(n):
+        <span class="text-amber-400">if</span> s[i] <span class="text-amber-400">in</span> vowels:
+            curr += <span class="text-amber-300">1</span>
+        P[i] = curr
+        
+    <span class="text-slate-500"># 2. Answer queries in O(1)</span>
+    ans = []
+    <span class="text-amber-400">for</span> L, R <span class="text-amber-400">in</span> queries:
+        <span class="text-amber-400">if</span> L == <span class="text-amber-300">0</span>: ans.append(P[R])
+        <span class="text-amber-400">else</span>: ans.append(P[R] - P[L - <span class="text-amber-300">1</span>])
+    <span class="text-amber-400">return</span> ans</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Contribution Method -->
+                <div id="tab-contrib" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">Sum of All Subarrays ($O(N)$ Optimal)</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Instead of generating all $O(N^2)$ subarrays, determine how many subarrays contain element $A[i]$.
+                            </p>
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900 font-mono">
+                                Formula: total_sum = sum( A[i] * (i + 1) * (n - i) )<br>
+                                Time: O(N) | Space: O(1)
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">sum_all_subarrays</span>(A):
+    n = len(A)
+    total_sum = <span class="text-amber-300">0</span>
+    
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(n):
+        occurrences = (i + <span class="text-amber-300">1</span>) * (n - i)
+        total_sum += A[i] * occurrences
+        
+    <span class="text-amber-400">return</span> total_sum</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: LC 985 -->
+                <div id="tab-lc985" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">LC 985: Even Sum After Queries</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Given array and queries `[val, index]`. Update element and return sum of even numbers after each query.
+                            </p>
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+                                <span class="font-bold">Delta Trick:</span> Compute initial sum of evens. On query, if old value was even, subtract it from sum. Add new value to array. If new value is even, add it to sum! $O(1)$ query processing.
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">sumEvenAfterQueries</span>(nums, queries):
+    even_sum = sum(x <span class="text-amber-400">for</span> x <span class="text-amber-400">in</span> nums <span class="text-amber-400">if</span> x % <span class="text-amber-300">2</span> == <span class="text-amber-300">0</span>)
+    ans = []
+    
+    <span class="text-amber-400">for</span> val, idx <span class="text-amber-400">in</span> queries:
+        <span class="text-slate-500"># Deduct old value if it was even</span>
+        <span class="text-amber-400">if</span> nums[idx] % <span class="text-amber-300">2</span> == <span class="text-amber-300">0</span>:
+            even_sum -= nums[idx]
+            
+        nums[idx] += val
+        
+        <span class="text-slate-500"># Add new value if it is even</span>
+        <span class="text-amber-400">if</span> nums[idx] % <span class="text-amber-300">2</span> == <span class="text-amber-300">0</span>:
+            even_sum += nums[idx]
+            
+        ans.append(even_sum)
+    <span class="text-amber-400">return</span> ans</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: LC 31 -->
+                <div id="tab-lc31" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">LC 31: Next Permutation</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Rearrange numbers into lexicographically next greater permutation in-place ($O(N)$ time, $O(1)$ space).
+                            </p>
+                            <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-900 space-y-1">
+                                <div class="font-bold text-rose-800">&#9888; 3-Step Algorithm:</div>
+                                <div>1. Find dip index from back where $A[i] < A[i+1]$.</div>
+                                <div>2. If no dip, reverse whole array (was strictly decreasing).</div>
+                                <div>3. If dip found, swap $A[idx]$ with next largest from back, then reverse suffix from $idx+1$ to end.</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">nextPermutation</span>(nums):
+    n = len(nums)
+    idx = -<span class="text-amber-300">1</span>
+    <span class="text-slate-500"># 1. Find dip from back</span>
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(n - <span class="text-amber-300">2</span>, -<span class="text-amber-300">1</span>, -<span class="text-amber-300">1</span>):
+        <span class="text-amber-400">if</span> nums[i] < nums[i + <span class="text-amber-300">1</span>]:
+            idx = i
+            <span class="text-amber-400">break</span>
+            
+    <span class="text-amber-400">if</span> idx == -<span class="text-amber-300">1</span>:
+        nums.reverse(); <span class="text-amber-400">return</span>
+        
+    <span class="text-slate-500"># 2. Find element > nums[idx] from back</span>
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(n - <span class="text-amber-300">1</span>, idx, -<span class="text-amber-300">1</span>):
+        <span class="text-amber-400">if</span> nums[i] > nums[idx]:
+            nums[i], nums[idx] = nums[idx], nums[i]
+            <span class="text-amber-400">break</span>
+            
+    <span class="text-slate-500"># 3. Reverse suffix</span>
+    nums[idx + <span class="text-amber-300">1</span>:] = reversed(nums[idx + <span class="text-amber-300">1</span>:])</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Sliding Windows -->
+                <div id="tab-sliding" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">Fixed & Variable Sliding Windows</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Avoid recomputing overlapping contiguous regions by adding incoming elements and removing outgoing elements.
+                            </p>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">max_subarray_sum_k</span>(A, k):
+    curr = sum(A[:k])
+    max_s = curr
+    <span class="text-amber-400">for</span> i <span class="text-amber-400">in</span> range(k, len(A)):
+        curr += A[i] - A[i - k]
+        max_s = max(max_s, curr)
+    <span class="text-amber-400">return</span> max_s</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 6: Two Pointers -->
+                <div id="tab-pointers" class="tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-slate-900 text-lg">LC 75: Sort Colors (Dutch Flag)</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Partition array of 0s, 1s, and 2s in a single pass using 3 pointers (`L`, `mid`, `R`).
+                            </p>
+                        </div>
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
+<pre><code class="text-slate-300"><span class="text-amber-400">def</span> <span class="text-emerald-400">sortColors</span>(nums):
+    L, mid, R = <span class="text-amber-300">0</span>, <span class="text-amber-300">0</span>, len(nums) - <span class="text-amber-300">1</span>
+    <span class="text-amber-400">while</span> mid <= R:
+        <span class="text-amber-400">if</span> nums[mid] == <span class="text-amber-300">0</span>:
+            nums[L], nums[mid] = nums[mid], nums[L]
+            L += <span class="text-amber-300">1</span>; mid += <span class="text-amber-300">1</span>
+        <span class="text-amber-400">elif</span> nums[mid] == <span class="text-amber-300">1</span>:
+            mid += <span class="text-amber-300">1</span>
+        <span class="text-amber-400">else</span>:
+            nums[mid], nums[R] = nums[R], nums[mid]
+            R -= <span class="text-amber-300">1</span>  <span class="text-slate-500"># Do NOT advance mid here!</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 6: Pattern Recognition Workbench Quiz -->
+        <section id="quiz" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">
+                    <span>&#129300; Pattern Recognition Quiz</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">Which Array Technique Fits Best?</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                    Test your ability to select the optimal technique for interview problem scenarios.
+                </p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-6">
+                <div id="quizQuestionBox" class="space-y-4">
+                    <!-- Dynamic Question Loaded via JS -->
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-xs text-slate-500 font-mono">
+                    <span id="quizScore">Score: 0 / 0</span>
+                    <button id="btnNextQuiz" class="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition font-sans text-xs font-bold">Next Question &#10095;</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="font-mono text-slate-300">Array Techniques & Optimization Masterclass &bull; Single-Page Interactive Application</p>
+            <p class="text-slate-500">Designed for algorithmic problem solving, interview readiness, and first-principles mastery.</p>
+        </div>
+    </footer>
+
+    <!-- Application JavaScript Engine -->
+    <script>
+        // ==========================================
+        // DATA STRUCTURES & ALGORITHM VISUALIZERS
+        // ==========================================
+
+        const algoConfigs = {
+            prefixSumRange: {
+                title: "Range Sum Query via Prefix Sum Array",
+                type: "Prefix Sum ($O(N)$ Prep, $O(1)$ Query)",
+                desc: "Precompute cumulative sums so any subarray sum [L..R] is P[R] - P[L-1].",
+                array: [1, 2, 3, 4, 5],
+                steps: [
+                    { idx: 0, prefix: [1], log: "Init: P[0] = A[0] = 1.", aux: "P = [1]", auxLabel: "Prefix Array" },
+                    { idx: 1, prefix: [1, 3], log: "P[1] = P[0] + A[1] = 1 + 2 = 3.", aux: "P = [1, 3]", auxLabel: "Prefix Array" },
+                    { idx: 2, prefix: [1, 3, 6], log: "P[2] = P[1] + A[2] = 3 + 3 = 6.", aux: "P = [1, 3, 6]", auxLabel: "Prefix Array" },
+                    { idx: 3, prefix: [1, 3, 6, 10], log: "P[3] = P[2] + A[3] = 6 + 4 = 10.", aux: "P = [1, 3, 6, 10]", auxLabel: "Prefix Array" },
+                    { idx: 4, prefix: [1, 3, 6, 10, 15], log: "P[4] = P[3] + A[4] = 10 + 5 = 15. Prefix Array Complete!", aux: "P = [1, 3, 6, 10, 15]", auxLabel: "Prefix Array" },
+                    { L: 1, R: 3, prefix: [1, 3, 6, 10, 15], log: "Query L=2, R=4 (indices 1..3: [2, 3, 4]). Formula: P[3] - P[0] = 10 - 1 = 9. O(1) Time!", aux: "Sum = 9", auxLabel: "Query Result" }
+                ]
+            },
+            vowelRangeQuery: {
+                title: "Vowel Count Range Queries (Binary Mapping)",
+                type: "Binary Prefix Sum",
+                desc: "Map vowels to 1 and consonants to 0, then compute prefix sum to query vowel counts in O(1).",
+                array: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'],
+                steps: [
+                    { idx: 0, res: [1, 0, 0, 0, 1, 0, 0, 0, 1], prefix: [1], log: "'a' is vowel -> Contrib = 1. P[0] = 1.", aux: "Contrib = 1", auxLabel: "Binary Mapping" },
+                    { idx: 1, res: [1, 0, 0, 0, 1, 0, 0, 0, 1], prefix: [1, 1], log: "'b' is consonant -> Contrib = 0. P[1] = 1.", aux: "Contrib = 0", auxLabel: "Binary Mapping" },
+                    { idx: 4, res: [1, 0, 0, 0, 1, 0, 0, 0, 1], prefix: [1, 1, 1, 1, 2], log: "Fast forward to 'e': vowel -> Contrib = 1. P[4] = 2.", aux: "P[4] = 2", auxLabel: "Prefix Vowel Count" },
+                    { idx: 8, res: [1, 0, 0, 0, 1, 0, 0, 0, 1], prefix: [1, 1, 1, 1, 2, 2, 2, 2, 3], log: "Complete Prefix Vowel Array: [1, 1, 1, 1, 2, 2, 2, 2, 3].", aux: "P = [1,1,1,1,2,2,2,2,3]", auxLabel: "Prefix State" },
+                    { L: 1, R: 6, prefix: [1, 1, 1, 1, 2, 2, 2, 2, 3], log: "Query L=1 ('b') to R=6 ('g'). Vowels = P[6] - P[0] = 2 - 1 = 1 ('e').", aux: "Vowels = 1", auxLabel: "Query Answer" }
+                ]
+            },
+            contributionMethod: {
+                title: "Sum of All Subarrays via Contribution Method",
+                type: "Mathematical Analysis ($O(N)$ Time)",
+                desc: "Each element at index i appears in (i + 1) * (n - i) subarrays.",
+                array: [1, 2, 3, 4],
+                steps: [
+                    { i: 0, res: [4], log: "A[0]=1: (0+1)*(4-0) = 4 subarrays. Contrib = 1 * 4 = 4.", aux: "Contrib: 4", auxLabel: "Element 1" },
+                    { i: 1, res: [4, 12], log: "A[1]=2: (1+1)*(4-1) = 6 subarrays. Contrib = 2 * 6 = 12.", aux: "Contrib: 12", auxLabel: "Element 2" },
+                    { i: 2, res: [4, 12, 18], log: "A[2]=3: (2+1)*(4-2) = 6 subarrays. Contrib = 3 * 6 = 18.", aux: "Contrib: 18", auxLabel: "Element 3" },
+                    { i: 3, res: [4, 12, 18, 16], log: "A[3]=4: (3+1)*(4-3) = 4 subarrays. Contrib = 4 * 4 = 16.", aux: "Contrib: 16", auxLabel: "Element 4" },
+                    { res: [4, 12, 18, 16], log: "Total Subarray Sum = 4 + 12 + 18 + 16 = 50 in O(N) time & O(1) space!", aux: "Total = 50", auxLabel: "Final Result" }
+                ]
+            },
+            lc985EvenSum: {
+                title: "LC 985: Even Sum After Queries",
+                type: "$O(1)$ Query Delta Update",
+                desc: "Update even sum on the fly by checking old and new value parity.",
+                array: [1, 2, 3, 4],
+                steps: [
+                    { i: -1, sum: 6, log: "Init: Even elements are 2 & 4. Initial Even Sum = 6.", aux: "Even Sum = 6", auxLabel: "Global State" },
+                    { i: 0, val: 1, arr: [2, 2, 3, 4], sum: 8, log: "Query [val=1, idx=0]: Old A[0]=1 (odd). New A[0]=2 (even). Add 2 -> Even Sum = 8.", aux: "Ans = [8]", auxLabel: "Even Sum" },
+                    { i: 1, val: -3, arr: [2, -1, 3, 4], sum: 6, log: "Query [val=-3, idx=1]: Old A[1]=2 (even -> subtract 2). New A[1]=-1 (odd). Even Sum = 6.", aux: "Ans = [8, 6]", auxLabel: "Even Sum" },
+                    { i: 0, val: -4, arr: [-2, -1, 3, 4], sum: 2, log: "Query [val=-4, idx=0]: Old A[0]=2 (even -> sub 2). New A[0]=-2 (even -> add -2). Even Sum = 2.", aux: "Ans = [8, 6, 2]", auxLabel: "Even Sum" },
+                    { i: 3, val: 2, arr: [-2, -1, 3, 6], sum: 4, log: "Query [val=2, idx=3]: Old A[3]=4 (even -> sub 4). New A[3]=6 (even -> add 6). Even Sum = 4.", aux: "Ans = [8, 6, 2, 4]", auxLabel: "Even Sum" }
+                ]
+            },
+            lc31NextPermutation: {
+                title: "LC 31: Next Permutation Mechanics",
+                type: "3-Step Pivot & Suffix Reversal",
+                desc: "Find dip idx where A[i] < A[i+1], swap with next largest from back, and reverse suffix.",
+                array: [2, 1, 5, 4, 3, 0, 0],
+                steps: [
+                    { i: 1, idx: 1, log: "1. Scan from back to find dip where A[i] < A[i+1]. Dip at idx=1 (A[1]=1 < 5).", aux: "Dip idx = 1", auxLabel: "Break-point" },
+                    { i: 4, idx: 1, log: "2. Scan from back to find first element > A[idx]=1. Found A[4]=3.", aux: "Swap Target = 3", auxLabel: "Next Greater" },
+                    { arr: [2, 3, 5, 4, 1, 0, 0], idx: 1, log: "3. Swap A[1] and A[4]. Array becomes [2, 3, 5, 4, 1, 0, 0].", aux: "Swapped!", auxLabel: "State" },
+                    { arr: [2, 3, 0, 0, 1, 4, 5], idx: 1, log: "4. Reverse suffix from idx+1 (2) to end. Subarray [5,4,1,0,0] reversed -> [0,0,1,4,5]. Next Permutation Complete!", aux: "RESULT READY", auxLabel: "Final Array" }
+                ]
+            },
+            maxSumFixed: {
+                title: "Max Subarray Sum of Size K",
+                type: "Fixed Window (K=3)",
+                desc: "Find contiguous subarray of length K=3 with maximum sum.",
+                array: [1, 7, 5, 3, 8, 11, -6, 2],
+                k: 3,
+                steps: [
+                    { L: 0, R: 0, sum: 1, max: 1, log: "Init: Start building first window. Add A[0] = 1.", aux: "Sum = 1", auxLabel: "Window Sum" },
+                    { L: 0, R: 2, sum: 13, max: 13, log: "First full window [1, 7, 5] complete. Max sum = 13.", aux: "Max = 13", auxLabel: "Current Max" },
+                    { L: 1, R: 3, sum: 15, max: 15, log: "Slide to index 3: Subtract A[0]=1, add A[3]=3. Sum = 15. New max!", aux: "Max = 15", auxLabel: "Current Max" },
+                    { L: 2, R: 4, sum: 16, max: 16, log: "Slide to index 4: Subtract A[1]=7, add A[4]=8. Sum = 16. New max!", aux: "Max = 16", auxLabel: "Current Max" },
+                    { L: 3, R: 5, sum: 22, max: 22, log: "Slide to index 5: Subtract A[2]=5, add A[5]=11. Sum = 22. New max!", aux: "Max = 22", auxLabel: "Current Max" }
+                ]
+            },
+            longestSubarrayVar: {
+                title: "Longest Subarray with Sum <= X (X=10)",
+                type: "Variable Window",
+                desc: "Expand R pointer. Shrink L pointer whenever sum exceeds 10.",
+                array: [1, 7, 8, 5, 6, 4, 3, 2],
+                x: 10,
+                steps: [
+                    { L: 0, R: 0, sum: 1, maxLen: 1, log: "Add A[0]=1. Sum=1 <= 10. Valid! Len = 1.", aux: "Max Len = 1", auxLabel: "Best Length" },
+                    { L: 0, R: 1, sum: 8, maxLen: 2, log: "Add A[1]=7. Sum=8 <= 10. Valid! Len = 2.", aux: "Max Len = 2", auxLabel: "Best Length" },
+                    { L: 1, R: 2, sum: 15, maxLen: 2, log: "Add A[2]=8. Sum=16 > 10! INVALID! Shrink L: remove A[0]=1.", aux: "Shrinking...", auxLabel: "State" },
+                    { L: 5, R: 7, sum: 9, maxLen: 3, log: "Fast forward: Window [4, 3, 2] at indices 5..7 has Sum=9 <= 10. Len=3! NEW MAX LEN = 3!", aux: "Max Len = 3", auxLabel: "Best Length" }
+                ]
+            },
+            sortColors3Way: {
+                title: "LC 75: Sort Colors (Dutch National Flag)",
+                type: "3-Way Partition (Two Pointers)",
+                desc: "Sort 0s, 1s, and 2s using 3 pointers: L, mid, R.",
+                array: [2, 0, 2, 1, 1, 0],
+                steps: [
+                    { L: 0, mid: 0, R: 5, arr: [2, 0, 2, 1, 1, 0], log: "mid=0, A[0]=2. Swap A[mid] with A[R]. Decrement R to 4. mid stays 0!", aux: "L=0, mid=0, R=4", auxLabel: "Pointers" },
+                    { L: 0, mid: 0, R: 4, arr: [0, 0, 2, 1, 1, 2], log: "mid=0, A[0]=0. Swap A[mid] with A[L]. Inc L to 1, mid to 1.", aux: "L=1, mid=1, R=4", auxLabel: "Pointers" },
+                    { L: 2, mid: 4, R: 3, arr: [0, 0, 1, 1, 2, 2], log: "Partitioning complete! Sorted in O(N) single pass.", aux: "SORTED!", auxLabel: "Status" }
+                ]
+            },
+            squaresSorted: {
+                title: "LC 977: Squares of a Sorted Array",
+                type: "Opposite Ends Two Pointers",
+                desc: "Fill result array backwards by comparing absolute values at left and right extremes.",
+                array: [-4, -1, 0, 3, 10],
+                steps: [
+                    { L: 0, R: 4, i: 4, res: [0, 0, 0, 0, 100], log: "Compare |-4|=4 vs |10|=10. 10 is larger -> res[4] = 100. Dec R.", aux: "res[4] = 100", auxLabel: "Result Array" },
+                    { L: 0, R: 3, i: 3, res: [0, 0, 0, 16, 100], log: "Compare |-4|=4 vs |3|=3. 4 is larger -> res[3] = 16. Inc L.", aux: "res[3] = 16", auxLabel: "Result Array" },
+                    { L: 2, R: 2, i: 0, res: [0, 1, 9, 16, 100], log: "L == R (val 0). res[0] = 0. Array fully sorted in O(N)!", aux: "res = [0, 1, 9, 16, 100]", auxLabel: "Result Array" }
+                ]
+            }
+        };
+
+        // Engine State
+        let currentAlgoKey = "prefixSumRange";
+        let currentStepIdx = 0;
+        let isPlaying = false;
+        let playTimer = null;
+        let playSpeed = 800;
+
+        // UI Handles
+        const algoSelect = document.getElementById("algoSelect");
+        const algoInfoCard = document.getElementById("algoInfoCard");
+        const arrayContainer = document.getElementById("arrayContainer");
+        const auxTitle = document.getElementById("auxTitle");
+        const auxMetric = document.getElementById("auxMetric");
+        const auxContent = document.getElementById("auxContent");
+        const windowSizeBadge = document.getElementById("windowSizeBadge");
+        const logText = document.getElementById("logText");
+        const stepCounter = document.getElementById("stepCounter");
+        const btnPrev = document.getElementById("btnPrev");
+        const btnNext = document.getElementById("btnNext");
+        const btnPlay = document.getElementById("btnPlay");
+        const btnReset = document.getElementById("btnReset");
+        const speedRange = document.getElementById("speedRange");
+        const speedVal = document.getElementById("speedVal");
+
+        // Render Step Logic
+        function renderStep() {
+            const config = algoConfigs[currentAlgoKey];
+            const step = config.steps[currentStepIdx];
+
+            // Info Card
+            algoInfoCard.innerHTML = `
+                <div>
+                    <span class="font-bold text-slate-900 text-base">${config.title}</span>
+                    <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded bg-amber-200 text-amber-800">${config.type}</span>
+                    <p class="text-xs text-slate-600 mt-1">${config.desc}</p>
+                </div>
+            `;
+
+            // Array Track
+            let arrToRender = step.arr || config.array;
+            arrayContainer.innerHTML = "";
+
+            arrToRender.forEach((val, idx) => {
+                const cell = document.createElement("div");
+                cell.className = "array-cell relative flex flex-col items-center justify-center w-10 h-12 sm:w-12 sm:h-14 rounded-lg font-mono font-bold text-sm sm:text-base border-2 shadow-sm transition-all";
+
+                let inHighlight = false;
+                if (step.L !== undefined && step.R !== undefined) {
+                    if (idx >= step.L && idx <= step.R) inHighlight = true;
+                } else if (step.idx !== undefined && step.idx === idx) {
+                    inHighlight = true;
+                } else if (step.i !== undefined && step.i === idx) {
+                    inHighlight = true;
+                }
+
+                if (inHighlight) {
+                    cell.classList.add("bg-amber-500", "text-slate-950", "border-amber-300", "scale-105", "shadow-amber-500/20");
+                } else {
+                    cell.classList.add("bg-slate-800", "text-slate-200", "border-slate-700");
+                }
+
+                cell.innerText = val;
+
+                // Index Label
+                const idxSpan = document.createElement("span");
+                idxSpan.className = "absolute -bottom-5 text-[10px] font-mono text-slate-400";
+                idxSpan.innerText = `[${idx}]`;
+                cell.appendChild(idxSpan);
+
+                // Pointer badges
+                const pointerContainer = document.createElement("div");
+                pointerContainer.className = "absolute -top-6 flex space-x-1";
+
+                if (step.L === idx) pointerContainer.appendChild(createBadge("L", "bg-rose-500"));
+                if (step.R === idx) pointerContainer.appendChild(createBadge("R", "bg-indigo-500"));
+                if (step.mid === idx) pointerContainer.appendChild(createBadge("mid", "bg-emerald-500"));
+                if (step.i === idx) pointerContainer.appendChild(createBadge("i", "bg-sky-400 text-slate-950"));
+
+                cell.appendChild(pointerContainer);
+                arrayContainer.appendChild(cell);
+            });
+
+            // Auxiliary Data State
+            auxTitle.innerText = step.auxLabel || "Auxiliary Memory State";
+            auxMetric.innerText = step.aux || "--";
+            auxContent.innerHTML = "";
+
+            if (step.prefix) {
+                const tag = document.createElement("div");
+                tag.className = "text-amber-300 font-bold";
+                tag.innerText = `P = [ ${step.prefix.join(", ")} ]`;
+                auxContent.appendChild(tag);
+            } else if (step.res) {
+                const tag = document.createElement("div");
+                tag.className = "text-emerald-400 font-bold";
+                tag.innerText = `[ ${step.res.join(", ")} ]`;
+                auxContent.appendChild(tag);
+            } else {
+                const tag = document.createElement("span");
+                tag.className = "text-slate-400 italic";
+                tag.innerText = "No auxiliary data overhead";
+                auxContent.appendChild(tag);
+            }
+
+            windowSizeBadge.innerText = step.L !== undefined && step.R !== undefined ? `Active Range: [${step.L}..${step.R}]` : `Mode: Step Execution`;
+            stepCounter.innerText = `Step ${currentStepIdx + 1} / ${config.steps.length}`;
+            logText.innerText = step.log;
+
+            btnPrev.disabled = currentStepIdx === 0;
+            btnNext.disabled = currentStepIdx === config.steps.length - 1;
+        }
+
+        function createBadge(text, colorClass) {
+            const badge = document.createElement("span");
+            badge.className = `pointer-badge text-[10px] ${colorClass} text-white font-bold px-1 rounded shadow`;
+            badge.innerText = text;
+            return badge;
+        }
+
+        // Playback Controls
+        function togglePlay() {
+            if (isPlaying) {
+                pause();
+            } else {
+                isPlaying = true;
+                btnPlay.innerText = "❚❚ Pause";
+                btnPlay.classList.replace("bg-amber-600", "bg-rose-600");
+                playTimer = setInterval(() => {
+                    const config = algoConfigs[currentAlgoKey];
+                    if (currentStepIdx < config.steps.length - 1) {
+                        currentStepIdx++;
+                        renderStep();
+                    } else {
+                        pause();
+                    }
+                }, playSpeed);
+            }
+        }
+
+        function pause() {
+            isPlaying = false;
+            clearInterval(playTimer);
+            btnPlay.innerText = "▶ Play";
+            btnPlay.classList.replace("bg-rose-600", "bg-amber-600");
+        }
+
+        algoSelect.addEventListener("change", (e) => {
+            pause();
+            currentAlgoKey = e.target.value;
+            currentStepIdx = 0;
+            renderStep();
+        });
+
+        btnNext.addEventListener("click", () => {
+            pause();
+            if (currentStepIdx < algoConfigs[currentAlgoKey].steps.length - 1) {
+                currentStepIdx++;
+                renderStep();
+            }
+        });
+
+        btnPrev.addEventListener("click", () => {
+            pause();
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderStep();
+            }
+        });
+
+        btnPlay.addEventListener("click", togglePlay);
+        btnReset.addEventListener("click", () => { pause(); currentStepIdx = 0; renderStep(); });
+        speedRange.addEventListener("input", (e) => {
+            playSpeed = parseInt(e.target.value);
+            speedVal.innerText = `${playSpeed}ms`;
+            if (isPlaying) { pause(); togglePlay(); }
+        });
+
+        renderStep();
+
+
+        // ==========================================
+        // CONTRIBUTION CALCULATOR LOGIC
+        // ==========================================
+        const customContribArray = document.getElementById("customContribArray");
+        const btnCalcContrib = document.getElementById("btnCalcContrib");
+        const btnPreset1 = document.getElementById("btnPreset1");
+        const btnPreset2 = document.getElementById("btnPreset2");
+        const contribTableBody = document.getElementById("contribTableBody");
+        const contribTotalSum = document.getElementById("contribTotalSum");
+
+        function computeContribution(arr) {
+            const n = arr.length;
+            contribTableBody.innerHTML = "";
+            let total = 0;
+
+            arr.forEach((val, i) => {
+                const starts = i + 1;
+                const ends = n - i;
+                const count = starts * ends;
+                const contrib = val * count;
+                total += contrib;
+
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-2.5 text-slate-400">${i}</td>
+                    <td class="py-2.5 font-bold text-amber-400">${val}</td>
+                    <td class="py-2.5 text-slate-300">${starts}</td>
+                    <td class="py-2.5 text-slate-300">${ends}</td>
+                    <td class="py-2.5 font-semibold text-emerald-400">${count}</td>
+                    <td class="py-2.5 text-right font-bold text-indigo-300">${contrib}</td>
+                `;
+                contribTableBody.appendChild(tr);
+            });
+
+            contribTotalSum.innerText = `Total Subarray Sum: ${total}`;
+        }
+
+        btnCalcContrib.addEventListener("click", () => {
+            const raw = customContribArray.value.split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+            if (raw.length > 0) computeContribution(raw);
+        });
+
+        btnPreset1.addEventListener("click", () => { customContribArray.value = "1, 2, 3"; computeContribution([1, 2, 3]); });
+        btnPreset2.addEventListener("click", () => { customContribArray.value = "2, 4, 1, 3"; computeContribution([2, 4, 1, 3]); });
+
+        // Initial compute
+        computeContribution([1, 2, 3, 4]);
+
+
+        // ==========================================
+        // CHART.JS AMORTIZED COMPLEXITY GRAPH
+        // ==========================================
+        const ctx = document.getElementById('complexityChart').getContext('2d');
+        const labels = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'O(N³) Triple Loop Slicing',
+                        data: labels.map(n => Math.pow(n, 3) / 1000),
+                        borderColor: '#f43f5e',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'O(N²) Carry Forward / Nested Loops',
+                        data: labels.map(n => Math.pow(n, 2) / 10),
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'O(N) Prefix Sum / Sliding Window',
+                        data: labels.map(n => 2 * n),
+                        borderColor: '#10b981',
+                        borderWidth: 3,
+                        tension: 0,
+                        pointRadius: 3
+                    },
+                    {
+                        label: 'O(1) Per Query Delta Update (LC 985)',
+                        data: labels.map(n => 5),
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { family: 'Inter', size: 10 }, boxWidth: 10 } }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Input Size (N)', font: { size: 11 } }, grid: { color: '#f1f5f9' } },
+                    y: { title: { display: true, text: 'Relative Operations', font: { size: 11 } }, grid: { color: '#f1f5f9' } }
+                }
+            }
+        });
+
+
+        // ==========================================
+        // TAB SWITCHER LOGIC
+        // ==========================================
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-tab');
+                tabBtns.forEach(b => {
+                    b.classList.remove('border-amber-500', 'text-amber-700', 'font-bold');
+                    b.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+                });
+                btn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+                btn.classList.add('border-amber-500', 'text-amber-700', 'font-bold');
+
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== targetId);
+                });
+            });
+        });
+
+
+        // ==========================================
+        // PATTERN RECOGNITION QUIZ WORKBENCH
+        // ==========================================
+        const quizQuestions = [
+            {
+                q: "You need to answer Q range sum queries on an array that NEVER changes. What is the optimal approach?",
+                options: [
+                    "Slicing brute force on each query",
+                    "Prefix Sum Array (O(N) prep, O(1) query)",
+                    "Sliding Window of size Q",
+                    "Next Permutation"
+                ],
+                correct: 1,
+                explain: "Correct! Precomputing a Prefix Sum array allows answering any range sum query in O(1) time."
+            },
+            {
+                q: "How can you find the sum of ALL contiguous subarrays in O(N) time without generating them?",
+                options: [
+                    "Contribution Method: sum += A[i] * (i + 1) * (n - i)",
+                    "Nested loops with carry forward",
+                    "Dutch National Flag 3-way partition",
+                    "Binary Search on prefix sums"
+                ],
+                correct: 0,
+                explain: "Correct! Every element at index i appears in exactly (i + 1) * (n - i) subarrays."
+            },
+            {
+                q: "In LC 31 (Next Permutation), what is the first step when scanning backwards from the end?",
+                options: [
+                    "Reverse the entire array immediately",
+                    "Find the break-point (dip) index where A[i] < A[i+1]",
+                    "Swap the first and last elements",
+                    "Sort the array in ascending order"
+                ],
+                correct: 1,
+                explain: "Correct! The dip index represents the first location where a larger digit can be substituted to create the next lexicographical permutation."
+            },
+            {
+                q: "When processing queries that modify array values, how do you track even element sums in O(1) per query?",
+                options: [
+                    "Re-sum the whole array on every query",
+                    "Deduct old value if even, apply update, add new value if even",
+                    "Rebuild the prefix sum array from scratch",
+                    "Sort the array after each query"
+                ],
+                correct: 1,
+                explain: "Correct! By tracking the delta (subtracting old even values and adding new even values), each query runs in O(1) time."
+            }
+        ];
+
+        let quizIdx = 0;
+        let quizScore = 0;
+
+        const quizQuestionBox = document.getElementById('quizQuestionBox');
+        const quizScoreText = document.getElementById('quizScore');
+        const btnNextQuiz = document.getElementById('btnNextQuiz');
+
+        function renderQuiz() {
+            const currentQ = quizQuestions[quizIdx];
+            quizQuestionBox.innerHTML = `
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Question ${quizIdx + 1} of ${quizQuestions.length}</span>
+                    <h4 class="text-base font-bold text-slate-900 leading-snug">${currentQ.q}</h4>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    ${currentQ.options.map((opt, idx) => `
+                        <button onclick="checkAnswer(${idx})" class="option-btn text-left p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs sm:text-sm font-medium text-slate-700 transition">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="quizFeedback" class="hidden text-xs sm:text-sm p-3 rounded-lg font-medium"></div>
+            `;
+            quizScoreText.innerText = `Score: ${quizScore} / ${quizQuestions.length}`;
+        }
+
+        window.checkAnswer = function(selectedIdx) {
+            const currentQ = quizQuestions[quizIdx];
+            const feedback = document.getElementById('quizFeedback');
+            const optionBtns = document.querySelectorAll('.option-btn');
+
+            optionBtns.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === currentQ.correct) {
+                    btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                } else if (idx === selectedIdx) {
+                    btn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-900');
+                }
+            });
+
+            feedback.classList.remove('hidden');
+            if (selectedIdx === currentQ.correct) {
+                quizScore++;
+                feedback.className = "text-xs sm:text-sm p-3 rounded-lg font-medium bg-emerald-50 text-emerald-800 border border-emerald-200";
+                feedback.innerHTML = `<strong>&#10003; Correct!</strong> ${currentQ.explain}`;
+            } else {
+                feedback.className = "text-xs sm:text-sm p-3 rounded-lg font-medium bg-rose-50 text-rose-800 border border-rose-200";
+                feedback.innerHTML = `<strong>&#10007; Incorrect.</strong> ${currentQ.explain}`;
+            }
+
+            quizScoreText.innerText = `Score: ${quizScore} / ${quizQuestions.length}`;
+        };
+
+        btnNextQuiz.addEventListener('click', () => {
+            quizIdx = (quizIdx + 1) % quizQuestions.length;
+            renderQuiz();
+        });
+
+        renderQuiz();
+    </script>
+</body>
+</html>
